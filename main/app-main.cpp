@@ -9,42 +9,34 @@
 //! Board Driver
 //! ----------------------------------------------------------------------------------------
 #include "board/lilygo/t-lora-pager.hpp"
+#include "device/lilygo_t_lora_pager_keyboard.hpp"
 #include "wrapper/freertos.hpp"
 #include "wrapper/logger.hpp"
 
 static const char* TAG = "App";
-
-//! Keyboard key-code → printable label table (4 rows × 10 cols = codes 1..40)
-//! Layout follows the physical key positions of the T-LoraPager keyboard.
-//! Code = row * num_cols + col + 1  (row=0..3, col=0..9)
-//! ----------------------------------------------------------------------------------------
-static constexpr int kKeyRows = 4;
-static constexpr int kKeyCols = 10;
-
-static const char* KeyLabel(uint8_t code)
-{
-    // clang-format off
-    static const char* kTable[kKeyRows * kKeyCols + 1] = {
-        "?",                                                    // 0 = invalid
-        "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",  "0",    // row 0: 1-10
-        "Q",  "W",  "E",  "R",  "T",  "Y",  "U",  "I",  "O",  "P",    // row 1: 11-20
-        "A",  "S",  "D",  "F",  "G",  "H",  "J",  "K",  "L",  "BS",   // row 2: 21-30
-        "ALT","Z",  "X",  "C",  "V",  "B",  "N",  "M", "SPC", "ENT",  // row 3: 31-40
-    };
-    // clang-format on
-    if (code == 0 || code > kKeyRows * kKeyCols)
-        return "?";
-    return kTable[code];
-}
 
 //! LVGL UI handles (accessed only under LvglPort lock)
 //! ----------------------------------------------------------------------------------------
 static lv_obj_t* g_key_label = nullptr;
 static lv_obj_t* g_status_label = nullptr;
 
+//! Board pointer for LVGL callbacks (set once before UI creation)
+static wrapper::LilyGoLoraPager* g_board = nullptr;
+
+//! Shutdown button click handler — runs inside LVGL task context
+static void OnShutdownBtnClicked(lv_event_t* e)
+{
+    if (lv_event_get_code(e) != LV_EVENT_CLICKED)
+        return;
+    ESP_LOGW(TAG, "Shutdown button pressed — cutting VSYS via BQ25896 BATFET_DIS");
+    if (g_board)
+        g_board->GetPmu().Shutdown();
+}
+
 static void CreateUi(wrapper::LilyGoLoraPager& board)
 {
     wrapper::LvglPort& lvgl = board.GetLvglPort();
+    lvgl.SetRotation(LV_DISPLAY_ROTATION_180);
 
     if (!lvgl.Lock(500))
     {
@@ -85,6 +77,18 @@ static void CreateUi(wrapper::LilyGoLoraPager& board)
     lv_obj_set_style_text_color(g_key_label, lv_color_hex(0x00FF00), 0);
     lv_obj_align(g_key_label, LV_ALIGN_TOP_LEFT, 10, 120);
 
+    // ── Shutdown button ───────────────────────────────────────────────────────
+    lv_obj_t* shutdown_btn = lv_button_create(scr);
+    lv_obj_set_size(shutdown_btn, 120, 36);
+    lv_obj_align(shutdown_btn, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_set_style_bg_color(shutdown_btn, lv_color_hex(0xCC2200), 0);
+    lv_obj_add_event_cb(shutdown_btn, OnShutdownBtnClicked, LV_EVENT_CLICKED, nullptr);
+
+    lv_obj_t* shutdown_lbl = lv_label_create(shutdown_btn);
+    lv_label_set_text(shutdown_lbl, "Power Off");
+    lv_obj_set_style_text_font(shutdown_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_center(shutdown_lbl);
+
     lvgl.Unlock();
 }
 
@@ -99,7 +103,8 @@ static void UpdateStatusLabel(wrapper::LilyGoLoraPager& board, const char* text)
     lvgl.Unlock();
 }
 
-static void UpdateKeyLabel(wrapper::LilyGoLoraPager& board, uint8_t code, bool pressed)
+static void UpdateKeyLabel(wrapper::LilyGoLoraPager& board,
+                           const wrapper::LilyGoLoRaPagerKeyEvent& ev)
 {
     wrapper::LvglPort& lvgl = board.GetLvglPort();
     if (g_key_label == nullptr)
@@ -107,10 +112,18 @@ static void UpdateKeyLabel(wrapper::LilyGoLoraPager& board, uint8_t code, bool p
     if (!lvgl.Lock(50))
         return;
 
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%s [%s]", KeyLabel(code), pressed ? "DN" : "UP");
-    lv_label_set_text(g_key_label, buf);
+    char buf[48];
+    if (ev.ch == '\n')
+        snprintf(buf, sizeof(buf), "%s ENTER [%s] %s%s", ev.label, ev.pressed ? "DN" : "UP",
+                 ev.cap_mode ? "[CAP]" : "", ev.sym_mode ? "[SYM]" : "");
+    else if (ev.ch != '\0')
+        snprintf(buf, sizeof(buf), "%s '%c' [%s] %s%s", ev.label, ev.ch, ev.pressed ? "DN" : "UP",
+                 ev.cap_mode ? "[CAP]" : "", ev.sym_mode ? "[SYM]" : "");
+    else
+        snprintf(buf, sizeof(buf), "%s [%s] %s%s", ev.label, ev.pressed ? "DN" : "UP",
+                 ev.cap_mode ? "[CAP]" : "", ev.sym_mode ? "[SYM]" : "");
 
+    lv_label_set_text(g_key_label, buf);
     lvgl.Unlock();
 }
 
@@ -145,21 +158,22 @@ wrapper::Task board_init(
         }
 
         // Build UI now that LVGL is running
+        g_board = &board;
         CreateUi(board);
         UpdateStatusLabel(board, "I2C OK | SPI/LCD OK");
 
         // ── Audio codec ──────────────────────────────────────────────────────
-        ESP_LOGI(TAG, "==> InitAudio");
-        if (!board.InitAudio())
-        {
-            ESP_LOGE(TAG, "InitAudio FAILED");
-            UpdateStatusLabel(board, "I2C OK | LCD OK | Audio FAIL");
-        }
-        else
-        {
-            ESP_LOGI(TAG, "I2S / ES8311 OK");
-            UpdateStatusLabel(board, "I2C OK | LCD OK | Audio OK");
-        }
+        // ESP_LOGI(TAG, "==> InitAudio");
+        // if (!board.InitAudio())
+        // {
+        //     ESP_LOGE(TAG, "InitAudio FAILED");
+        //     UpdateStatusLabel(board, "I2C OK | LCD OK | Audio FAIL");
+        // }
+        // else
+        // {
+        //     ESP_LOGI(TAG, "I2S / ES8311 OK");
+        //     UpdateStatusLabel(board, "I2C OK | LCD OK | Audio OK");
+        // }
 
         // ── Keyboard matrix ──────────────────────────────────────────────────
         ESP_LOGI(TAG, "==> InitKeyboard");
@@ -175,28 +189,37 @@ wrapper::Task board_init(
         }
 
         // ── Keyboard event loop ──────────────────────────────────────────────
-        wrapper::Tca8418& kb = board.GetKeyboard();
-        ESP_LOGI(TAG, "Entering keyboard event loop");
+        static wrapper::Logger kb_logger("App", "KB", "Pager");
+        wrapper::LilyGoLoRaPagerKeyboard kb(kb_logger, board.GetKeyboard());
 
+        kb.SetKeyCallback(
+            [&board](const wrapper::LilyGoLoRaPagerKeyEvent& ev)
+            {
+                ESP_LOGI(TAG, "Key %2u (%s) %s  [row=%u,col=%u]  ch='%c'  mode:%s%s", ev.code,
+                         ev.label, ev.pressed ? "DN" : "UP", ev.row, ev.col, ev.ch ? ev.ch : '.',
+                         ev.cap_mode ? "CAP " : "", ev.sym_mode ? "SYM" : "");
+
+                // SYM + BS → 关机
+                if (ev.pressed && ev.code == wrapper::LilyGoLoRaPagerKeyboard::kCodeBs &&
+                    ev.sym_mode)
+                {
+                    ESP_LOGW(TAG, "SYM+BS: initiating shutdown via BQ25896 BATFET_DIS");
+                    board.GetPmu().Shutdown();
+                    return;
+                }
+
+                UpdateKeyLabel(board, ev);
+            });
+
+        ESP_LOGI(TAG, "Entering keyboard event loop");
         while (true)
         {
-            if (kb.EventAvailable())
-            {
-                uint8_t code = 0;
-                bool pressed = false;
-
-                while (kb.GetKeyEvent(code, pressed))
-                {
-                    ESP_LOGI(TAG, "Key %u (%s) %s", code, KeyLabel(code),
-                             pressed ? "pressed" : "released");
-                    UpdateKeyLabel(board, code, pressed);
-                }
-            }
+            kb.Poll();
             wrapper::Delay(20);
         }
     },
     nullptr,
-    8192,
+    16384,
     5);
 
 //! Application entry point

@@ -1,0 +1,238 @@
+#include "screen_sd_browser.hpp"
+#include "screen_install_progress.hpp"
+
+#include <cstring>
+#include <esp_log.h>
+
+static const char* TAG = "Launcher|SdBrowser";
+
+namespace launcher::ui
+{
+
+// ── Context struct ────────────────────────────────────────────────────────────
+
+struct SdBrowserCtx
+{
+    ScreenSdBrowser* self;
+    int idx;
+};
+
+// ─── Construction ─────────────────────────────────────────────────────────────
+
+ScreenSdBrowser::ScreenSdBrowser(ScreenManager& mgr,
+                                 core::AppRegistry& registry,
+                                 core::SdInstaller& installer)
+    : mgr_(mgr), registry_(registry), installer_(installer)
+{
+    hal::IDisplay& disp = mgr_.display();
+
+    if (!disp.lock(1000))
+    {
+        ESP_LOGE(TAG, "Lock timeout");
+        return;
+    }
+
+    screen_ = lv_obj_create(nullptr);
+    lv_obj_set_style_bg_color(screen_, lv_color_hex(0x1A1A2E), 0);
+    lv_obj_set_style_bg_opa(screen_, LV_OPA_COVER, 0);
+
+    buildWidgets();
+    disp.unlock();
+
+    mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
+}
+
+// ─── Widgets ──────────────────────────────────────────────────────────────────
+
+void ScreenSdBrowser::buildWidgets()
+{
+    hal::IDisplay& disp = mgr_.display();
+    const int W = disp.width();
+
+    // Title bar
+    lv_obj_t* bar = lv_obj_create(screen_);
+    lv_obj_set_size(bar, W, 30);
+    lv_obj_align(bar, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_bg_color(bar, lv_color_hex(0x16213E), 0);
+    lv_obj_set_style_border_width(bar, 0, 0);
+    lv_obj_set_style_radius(bar, 0, 0);
+    lv_obj_set_style_pad_all(bar, 4, 0);
+
+    lv_obj_t* back_btn = lv_button_create(bar);
+    lv_obj_set_size(back_btn, 60, 22);
+    lv_obj_align(back_btn, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_set_style_bg_color(back_btn, lv_color_hex(0x0F3460), 0);
+    lv_obj_t* back_lbl = lv_label_create(back_btn);
+    lv_label_set_text(back_lbl, LV_SYMBOL_LEFT " Back");
+    lv_obj_set_style_text_font(back_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_center(back_lbl);
+    lv_obj_add_event_cb(back_btn, onBackClicked, LV_EVENT_CLICKED, this);
+
+    lv_obj_t* title = lv_label_create(bar);
+    lv_label_set_text(title, "SD Card — select .bin to install");
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(title, lv_color_hex(0xE2E2E2), 0);
+    lv_obj_align(title, LV_ALIGN_CENTER, 20, 0);
+
+    list_ = lv_list_create(screen_);
+    lv_obj_set_size(list_, W, disp.height() - 50);
+    lv_obj_align(list_, LV_ALIGN_TOP_MID, 0, 32);
+    lv_obj_set_style_bg_color(list_, lv_color_hex(0x1A1A2E), 0);
+    lv_obj_set_style_border_width(list_, 0, 0);
+    lv_obj_set_style_radius(list_, 0, 0);
+
+    status_lbl_ = lv_label_create(screen_);
+    lv_obj_set_style_text_font(status_lbl_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(status_lbl_, lv_color_hex(0x888888), 0);
+    lv_obj_align(status_lbl_, LV_ALIGN_BOTTOM_LEFT, 4, -2);
+
+    refreshList();
+}
+
+void ScreenSdBrowser::refreshList()
+{
+    if (!list_)
+        return;
+
+    lv_obj_clean(list_);
+
+    if (files_.empty())
+    {
+        lv_obj_t* lbl = lv_list_add_text(list_, "No .bin files found on SD card");
+        lv_obj_set_style_text_color(lbl, lv_color_hex(0x888888), 0);
+        lv_label_set_text(status_lbl_, "Insert SD card with .bin files");
+        return;
+    }
+
+    for (int i = 0; i < static_cast<int>(files_.size()); ++i)
+    {
+        // Show only the filename, not the full path
+        const char* slash = strrchr(files_[i].c_str(), '/');
+        const char* name = slash ? slash + 1 : files_[i].c_str();
+
+        lv_obj_t* btn = lv_list_add_button(list_, LV_SYMBOL_FILE, name);
+        lv_obj_set_style_text_font(lv_obj_get_child(btn, 1), &lv_font_montserrat_14, 0);
+
+        auto* ctx = new SdBrowserCtx{this, i};
+        lv_obj_add_event_cb(btn, onItemClicked, LV_EVENT_CLICKED, ctx);
+        lv_obj_add_event_cb(
+            btn,
+            [](lv_event_t* e) { delete static_cast<SdBrowserCtx*>(lv_event_get_user_data(e)); },
+            LV_EVENT_DELETE, ctx);
+    }
+
+    char buf[48];
+    snprintf(buf, sizeof(buf), "%zu file(s) found", files_.size());
+    lv_label_set_text(status_lbl_, buf);
+    selected_idx_ = 0;
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+
+void ScreenSdBrowser::handleInput(const hal::InputEvent& ev)
+{
+    hal::IDisplay& disp = mgr_.display();
+
+    if (ev.nav == hal::NavKey::BACK)
+    {
+        mgr_.pop();
+        return;
+    }
+
+    if (files_.empty())
+        return;
+
+    if (ev.nav == hal::NavKey::NEXT)
+    {
+        selected_idx_ = (selected_idx_ + 1) % static_cast<int>(files_.size());
+        if (disp.lock(100))
+        {
+            lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
+            if (btn)
+                lv_obj_scroll_to_view(btn, LV_ANIM_ON);
+            disp.unlock();
+        }
+    }
+    else if (ev.nav == hal::NavKey::PREV)
+    {
+        selected_idx_ =
+            (selected_idx_ - 1 + static_cast<int>(files_.size())) % static_cast<int>(files_.size());
+        if (disp.lock(100))
+        {
+            lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
+            if (btn)
+                lv_obj_scroll_to_view(btn, LV_ANIM_ON);
+            disp.unlock();
+        }
+    }
+    else if (ev.nav == hal::NavKey::SELECT)
+    {
+        startInstall(selected_idx_);
+    }
+}
+
+void ScreenSdBrowser::startInstall(int idx)
+{
+    if (idx < 0 || idx >= static_cast<int>(files_.size()))
+        return;
+
+    const std::string& path = files_[idx];
+
+    // Derive display name from filename (strip path and .bin extension)
+    const char* slash = strrchr(path.c_str(), '/');
+    std::string name = slash ? slash + 1 : path;
+    // Remove .bin suffix (case-insensitive)
+    if (name.size() > 4)
+    {
+        std::string ext = name.substr(name.size() - 4);
+        if (ext == ".bin" || ext == ".BIN")
+            name = name.substr(0, name.size() - 4);
+    }
+
+    // Push progress screen
+    extern void pushInstallProgress(ScreenManager&, core::AppRegistry&, core::SdInstaller&,
+                                    const std::string&, const std::string&);
+    pushInstallProgress(mgr_, registry_, installer_, path, name);
+}
+
+// ─── LVGL callbacks ───────────────────────────────────────────────────────────
+
+void ScreenSdBrowser::onItemClicked(lv_event_t* e)
+{
+    auto* ctx = static_cast<SdBrowserCtx*>(lv_event_get_user_data(e));
+    if (ctx && lv_event_get_code(e) == LV_EVENT_CLICKED)
+        ctx->self->startInstall(ctx->idx);
+}
+
+void ScreenSdBrowser::onBackClicked(lv_event_t* e)
+{
+    if (lv_event_get_code(e) != LV_EVENT_CLICKED)
+        return;
+    auto* self = static_cast<ScreenSdBrowser*>(lv_event_get_user_data(e));
+    if (self)
+        self->mgr_.pop();
+}
+
+// ─── Free helper for forward-declaration push ─────────────────────────────────
+
+// Declared in screen_sd_browser.hpp; called by ScreenAppList.
+// launcher.cpp stores g_sd_installer so this function can reach it.
+extern core::SdInstaller* g_sd_installer;
+
+void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry)
+{
+    if (!g_sd_installer)
+    {
+        ESP_LOGE(TAG, "g_sd_installer is null — SD browsing unavailable");
+        return;
+    }
+
+    auto* scr = new ScreenSdBrowser(mgr, registry, *g_sd_installer);
+    // Populate file list now (storage already mounted by launcher.cpp)
+    extern hal::IStorage* g_storage;
+    if (g_storage)
+        scr->setFiles(g_storage->sdListFiles(CONFIG_LAUNCHER_SD_MOUNT_POINT, ".bin"));
+    mgr.push(scr->screen(), [scr]() { delete scr; });
+}
+
+}  // namespace launcher::ui

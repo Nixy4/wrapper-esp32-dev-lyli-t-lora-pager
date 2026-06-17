@@ -1,0 +1,31 @@
+menu "Launcher"
+
+    choice LAUNCHER_BOARD
+        prompt "Target board"
+        default LAUNCHER_BOARD_LILYGO_T_LORA_PAGER
+        config LAUNCHER_BOARD_LILYGO_T_LORA_PAGER
+            bool "LilyGo T-LoRa Pager"
+            depends on WRAPPER_ESP32_BOARD_LILYGO_T_LORA_PAGER
+    endchoice
+
+    config LAUNCHER_SD_MOUNT_POINT
+        string "SD card VFS mount point"
+        default "/sdcard"
+        help
+            VFS path where the SD card is mounted (e.g. /sdcard).
+
+    config LAUNCHER_NVS_APP_NS
+        string "NVS namespace for app registry"
+        default "l_apps"
+        help
+            NVS namespace used to store the installed-app registry
+            (partition_label → display_name).
+
+    config LAUNCHER_NVS_CFG_NS
+        string "NVS namespace for launcher settings"
+        default "l_cfg"
+        help
+            NVS namespace for persistent launcher settings such as
+            last-booted app, backlight level, etc.
+
+endmenu

@@ -11,16 +11,16 @@ namespace launcher::core
 {
 
 /**
- * @brief Manages application boot selection and launch.
+ * @brief 管理应用启动选择与引导逻辑。
  *
- * On startup, BootManager decides whether to show the Launcher menu or
- * to boot the last-used application immediately:
+ * 启动时，BootManager 决定是显示 Launcher 菜单还是直接
+ * 引导上次使用的应用：
  *
- *   shouldShowMenu() == false  →  call bootApp(last_label)
- *   shouldShowMenu() == true   →  show ScreenAppList
+ *   shouldShowMenu() == false  →  调用 bootApp(last_label)
+ *   shouldShowMenu() == true   →  显示 ScreenAppList
  *
- * bootApp() updates the OTA boot partition via IPartition::setBootByLabel(),
- * records the choice in NVS, and calls esp_restart().
+ * bootApp() 通过 IPartition::setBootByLabel() 更新 OTA 引导分区，
+ * 将选择记录到 NVS，然后调用 esp_restart()。
  */
 class BootManager
 {
@@ -38,29 +38,29 @@ class BootManager
                 const char* cfg_ns = CONFIG_LAUNCHER_NVS_CFG_NS);
 
     /**
-     * @brief Determine whether the Launcher UI should be shown.
+     * @brief 决定是否应显示 Launcher UI。
      *
-     * Returns true (show menu) when:
-     *   - No last-booted app is recorded in NVS, OR
-     *   - The recorded partition no longer exists in the partition table.
+     * 以下情况返回 true（显示菜单）：
+     *   - NVS 中没有记录上次启动的应用，或
+     *   - 记录的分区已不存在于分区表中。
      *
-     * Returns false (auto-boot) when a valid last-booted app is found.
+     * 找到有效的上次启动应用时返回 false（自动引导）。
      *
-     * @param[out] last_label  Populated with the last-booted label when
-     *                         returning false (ready to pass to bootApp()).
+     * @param[out] last_label  返回 false 时填充上次启动的标签
+     *                         （可直接传入 bootApp()）。
      */
     bool shouldShowMenu(std::string& last_label);
 
     /**
-     * @brief Boot the app identified by @p label.
+     * @brief 引导由 @p label 标识的应用。
      *
-     * Sets the OTA boot partition, saves the label to NVS, then calls
-     * esp_restart().  Does NOT return on success.
+     * 设置 OTA 引导分区，将标签写入 NVS，然后
+     * 调用 esp_restart()。成功时不返回。
      */
     void bootApp(const std::string& label);
 
     /**
-     * @brief Get the label of the partition that is currently running.
+     * @brief 获取当前运行分区的标签。
      */
     bool getCurrentLabel(std::string& label);
 };

@@ -27,7 +27,7 @@ bool BootManager::shouldShowMenu(std::string& last_label)
         return true;
     }
 
-    // Verify the saved partition still exists
+    // 验证保存的分区是否仍然存在
     const esp_partition_t* p = esp_partition_find_first(
         ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, last_label.c_str());
 
@@ -56,7 +56,7 @@ void BootManager::bootApp(const std::string& label)
     registry_.setLastBooted(label);
 
     ESP_LOGI(TAG, "Restarting…");
-    // Small delay so UART output can flush
+    // 小延迟以将 UART 输出刷新
     time_.delayMs(100);
     esp_restart();
     // Not reached

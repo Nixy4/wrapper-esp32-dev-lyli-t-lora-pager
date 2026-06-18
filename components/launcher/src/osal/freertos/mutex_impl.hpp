@@ -9,7 +9,7 @@ namespace launcher::osal
 {
 
 /**
- * @brief FreeRTOS implementation of IMutex.
+ * @brief IMutex 的 FreeRTOS 实现。
  */
 class FreeRtosMutex : public IMutex
 {

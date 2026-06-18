@@ -19,8 +19,8 @@ bool AppRegistry::load(std::vector<AppInfo>& apps)
     std::vector<std::string> keys;
     if (!storage_.nvsIterateKeys(app_ns_, keys))
     {
-        ESP_LOGW(TAG, "No app namespace found (first run?)");
-        return true;  // empty list is valid
+        ESP_LOGW(TAG, "未找到应用命名空间（首次运行？）");
+        return true;  // 空列表是合法的
     }
 
     for (const auto& key : keys)

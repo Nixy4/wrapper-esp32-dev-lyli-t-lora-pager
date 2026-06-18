@@ -6,20 +6,20 @@ namespace launcher::osal
 {
 
 /**
- * @brief Platform-agnostic mutex abstraction.
+ * @brief 平台无关的互斥锁抽象接口。
  *
- * FreeRTOS implementation: freertos/mutex_impl.hpp
+ * FreeRTOS 实现： freertos/mutex_impl.hpp
  */
 class IMutex
 {
    public:
     virtual ~IMutex() = default;
 
-    /// Acquire the mutex.  @p timeout_ms == UINT32_MAX blocks forever.
-    /// @return true on success, false on timeout.
+    /// 获取互斥锁。@p timeout_ms == UINT32_MAX 表示永久阻塞。
+    /// @return 成功返回 true，超时返回 false。
     virtual bool lock(uint32_t timeout_ms = UINT32_MAX) = 0;
 
-    /// Release the mutex.
+    /// 释放互斥锁。
     virtual void unlock() = 0;
 };
 

@@ -10,20 +10,20 @@ namespace launcher::ui
 {
 
 /**
- * @brief Stack-based screen navigation manager.
+ * @brief 基于栈的屏幕导航管理器。
  *
- * Each "screen" is an lv_obj_t* created with lv_obj_create(NULL).
- * ScreenManager owns the lifecycle of screens on its stack:
- *   - push() creates and loads a new screen on top.
- *   - pop()  destroys the top screen and reloads the previous one.
- *   - replace() is a combined pop + push in one step.
+ * 每个“屏幕”都是由 lv_obj_create(NULL) 创建的 lv_obj_t*。
+ * ScreenManager 负责管理屏幕栈中屏幕的生命周期：
+ *   - push()    创建并加载新屏幕到栈顶。
+ *   - pop()     销毁栈顶屏幕并重新加载前一个。
+ *   - replace() 一步完成 pop + push。
  *
- * All LVGL calls must be made while holding the display lock.
- * ScreenManager acquires/releases the lock internally around
- * loadScreen() and lv_obj_del() operations.
+ * 所有 LVGL 调用必须在持有显示锁的情况下进行。
+ * ScreenManager 内部在 loadScreen() 和 lv_obj_del() 操作周围
+ * 自动获取/释放锁。
  *
- * Screens receive input events via InputCallback registered on IInput;
- * screens update that registration each time they become active.
+ * 屏幕通过在 IInput 上注册的 InputCallback 接收输入事件；
+ * 每次屏幕变为激活状态时都会更新该注册。
  */
 class ScreenManager
 {
@@ -49,19 +49,18 @@ class ScreenManager
     ScreenManager(hal::IDisplay& display, hal::IInput& input);
     ~ScreenManager();
 
-    /// Push a pre-created LVGL screen onto the stack and make it active.
-    /// @param on_destroy  Optional callback invoked just before the screen
-    ///                    object is deleted (e.g. to free user data).
+    /// 将预先创建的 LVGL 屏幕压入栈并使其激活。
+    /// @param on_destroy  屏幕对象删除前调用的回调（如需释放用户数据）。
     void push(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
 
-    /// Remove the top screen and return to the previous one.
-    /// No-op if only one screen remains.
+    /// 删除栈顶屏幕并返回上一个屏幕。
+    /// 只剩一个屏幕时不操作。
     void pop();
 
-    /// Replace the top screen (pop + push without an intermediate redraw).
+    /// 替换栈顶屏幕（pop + push 不产生中间重绘）。
     void replace(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
 
-    /// Number of screens on the stack.
+    /// 栈中屏幕数量。
     size_t depth() const { return stack_.size(); }
 
     hal::IDisplay& display() { return display_; }

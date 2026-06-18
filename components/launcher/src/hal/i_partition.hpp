@@ -8,35 +8,35 @@ namespace launcher::hal
 {
 
 /**
- * @brief Describes a flash partition slot selected for firmware installation.
+ * @brief 描述为固件安装选定的 Flash 分区槽位。
  */
 struct InstallSlot
 {
-    char label[17] = {};    ///< Physical partition label (e.g. "ota_0")
-    uint8_t subtype = 0;    ///< ESP partition subtype (ESP_PARTITION_SUBTYPE_APP_OTA_x)
-    uint32_t offset = 0;    ///< Flash byte address of the partition
-    uint32_t capacity = 0;  ///< Partition size in bytes
-    bool is_new = true;     ///< true → new install, false → re-flash existing slot
+    char label[17] = {};    ///< 物理分区标签（如 "ota_0"）
+    uint8_t subtype = 0;    ///< ESP 分区子类型（ESP_PARTITION_SUBTYPE_APP_OTA_x）
+    uint32_t offset = 0;    ///< 分区的 Flash 字节地址
+    uint32_t capacity = 0;  ///< 分区大小（字节）
+    bool is_new = true;     ///< true 表示新安装，false 表示重新刷入已有槽位
 };
 
 /**
- * @brief Progress callback: (bytes_written, total_bytes).
+ * @brief 进度回调：(bytes_written, total_bytes)。
  */
 using FlashProgressCb = std::function<void(size_t written, size_t total)>;
 
 /**
- * @brief Platform-agnostic partition / OTA flash abstraction.
+ * @brief 平台无关的分区 / OTA 刷写抽象接口。
  *
- * The typical install flow is:
- *   1. planInstall(nullptr, image_size, slot)   — select target slot
- *   2. flashBegin(slot, image_size)             — erase & init OTA session
- *   3. flashWrite(data, len)  × N              — stream firmware chunks
- *   4. flashEnd()                               — validate & finalise
- *   5. setBootByLabel(slot.label)               — point otadata at new app
+ * 典型安装流程：
+ *   1. planInstall(nullptr, image_size, slot)   — 选择目标槽位
+ *   2. flashBegin(slot, image_size)             — 擦除并初始化 OTA 会话
+ *   3. flashWrite(data, len)  × N              — 流式传输固件块
+ *   4. flashEnd()                               — 校验并终结
+ *   5. setBootByLabel(slot.label)               — 将 otadata 指向新应用
  *
- * To abort an in-progress write call flashAbort().
+ * 如需中止进行中的写入，调用 flashAbort()。
  *
- * ESP32 implementation: esp32/partition_esp32.hpp
+ * ESP32 实现： esp32/partition_esp32.hpp
  */
 class IPartition
 {
@@ -44,48 +44,48 @@ class IPartition
     virtual ~IPartition() = default;
 
     /**
-     * @brief Select a partition slot for installation.
+     * @brief 选择安装用的分区槽位。
      *
-     * @param label       Partition label to (re-)install to, or nullptr to
-     *                    auto-select the first suitable OTA slot.
-     * @param image_size  Firmware binary size in bytes.
-     * @param slot        Output: selected slot details.
-     * @return false if no suitable slot exists (e.g. image too large).
+     * @param label       要（重）安装的分区标签，传 nullptr 则自动
+     *                    选择第一个合适的 OTA 槽位。
+     * @param image_size  固件二进制大小（字节）。
+     * @param slot        输出：所选槽位详情。
+     * @return 无合适槽位时（如固件过大）返回 false。
      */
     virtual bool planInstall(const char* label, size_t image_size, InstallSlot& slot) = 0;
 
     /**
-     * @brief Begin an OTA write session to @p slot.
+     * @brief 开始向 @p slot 写入 OTA 会话。
      *
-     * @param slot        Slot returned by planInstall().
-     * @param image_size  Total firmware image size (0 = unknown).
+     * @param slot        由 planInstall() 返回的槽位。
+     * @param image_size  固件镜像总大小（0 表示未知）。
      */
     virtual bool flashBegin(const InstallSlot& slot, size_t image_size) = 0;
 
-    /// Write @p len bytes of firmware data.
+    /// 写入 @p len 字节的固件数据。
     virtual bool flashWrite(const uint8_t* data, size_t len) = 0;
 
-    /// Validate and finalise the OTA session.
+    /// 校验并终结 OTA 会话。
     virtual bool flashEnd() = 0;
 
-    /// Abort an active OTA session (no-op if none is active).
+    /// 中止当前活跃的 OTA 会话（无活跃会话时为空操作）。
     virtual bool flashAbort() = 0;
 
     /**
-     * @brief Set the boot partition by label.
+     * @brief 按标签设置引导分区。
      *
-     * Writes the OTA selection to the otadata partition and calls
-     * esp_restart() in the caller (not here — that is the caller's job).
+     * 将 OTA 选择写入 otadata 分区，调用方负责执行
+     * esp_restart()（本函数不调用重启）。
      *
-     * @return false if the partition was not found or otadata is absent.
+     * @return 分区未找到或 otadata 缺失时返回 false。
      */
     virtual bool setBootByLabel(const char* label) = 0;
 
     /**
-     * @brief Get the label of the currently-selected boot partition.
+     * @brief 获取当前已选定的引导分区标签。
      *
-     * @param label_out  Output buffer (at least 17 bytes).
-     * @param max_len    Size of @p label_out.
+     * @param label_out  输出缓冲区（至少 17 字节）。
+     * @param max_len    @p label_out 的大小。
      */
     virtual bool getBootLabel(char* label_out, size_t max_len) = 0;
 };

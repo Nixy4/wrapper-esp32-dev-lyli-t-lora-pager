@@ -13,7 +13,7 @@ static const char* TAG = "Launcher|Storage";
 namespace launcher::hal
 {
 
-// ─── Construction / destruction ──────────────────────────────────────────────
+// ─── 构造 / 析构 ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 StorageEsp32::StorageEsp32(wrapper::Logger& logger,
                            wrapper::SpiBus& spi_bus,
@@ -56,7 +56,7 @@ bool StorageEsp32::nvsGet(const char* ns, const char* key, std::string& out)
     if (err != ESP_OK)
         return false;
 
-    // nvs_get_str includes the null terminator in len; strip it
+    // nvs_get_str 的 len 包含空终止符，删掉它
     if (!out.empty() && out.back() == '\0')
         out.pop_back();
 
@@ -88,7 +88,7 @@ bool StorageEsp32::nvsDel(const char* ns, const char* key)
         nvs_commit(h);
 
     nvs_close(h);
-    // Treat "key not found" as success (idempotent delete)
+    // 将“键不存在”视为成功（幂等删除）
     return err == ESP_OK || err == ESP_ERR_NVS_NOT_FOUND;
 }
 
@@ -111,7 +111,7 @@ bool StorageEsp32::nvsIterateKeys(const char* ns, std::vector<std::string>& keys
     return true;
 }
 
-// ─── SD card ─────────────────────────────────────────────────────────────────
+// ─── SD 卡 ───────────────────────────────────────────────────────────────────
 
 bool StorageEsp32::sdMount()
 {
@@ -166,7 +166,7 @@ std::vector<std::string> StorageEsp32::sdListFiles(const char* dir, const char* 
 
         const char* name = de->d_name;
 
-        // Extension filter
+        // 扩展名过滤器
         if (ext && ext[0] != '\0')
         {
             const char* dot = strrchr(name, '.');

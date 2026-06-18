@@ -10,23 +10,23 @@ namespace launcher::ui
 {
 
 /**
- * @brief The main Launcher screen: shows the list of installed apps.
+ * @brief Launcher 主屏幕：显示已安装的应用列表。
  *
- * Layout (480 × 222 landscape):
+ * 布局（480 × 222 横屏）：
  *   ┌──────────────────────────────────────────────────────┐
- *   │  Launcher              [SD Install]  [Settings]  ... │  title bar
+ *   │  Launcher              [SD Install]  [Settings]  ... │  标题栏
  *   ├──────────────────────────────────────────────────────┤
  *   │  ▶ My App 1                                          │
- *   │    My App 2                                          │  scrollable list
+ *   │    My App 2                                          │  可滚动列表
  *   │    My App 3                                          │
  *   │                                                      │
  *   └──────────────────────────────────────────────────────┘
- *   Status: "3 apps installed"
+ *   状态栏：“3 apps installed”
  *
- * Navigation:
- *   NEXT / PREV  → move list selection
- *   SELECT       → confirm boot (shows confirmation dialog)
- *   BACK (long)  → no-op (already at root)
+ * 导航操作：
+ *   NEXT / PREV  → 移动列表选中项
+ *   SELECT       → 确认引导（显示确认对话框）
+ *   BACK (长按) → 无操作（已在根屏幕）
  */
 class ScreenAppList
 {
@@ -41,7 +41,7 @@ class ScreenAppList
     std::vector<core::AppInfo> apps_;
     int selected_idx_ = 0;
 
-    // ── LVGL event callbacks ──────────────────────────────────────────────────
+    // ─── LVGL 事件回调 ────────────────────────────────────────────────────────────────────────────────────────────────────────────
     static void onListItemClicked(lv_event_t* e);
     static void onSdInstallClicked(lv_event_t* e);
     static void onSettingsClicked(lv_event_t* e);
@@ -54,7 +54,7 @@ class ScreenAppList
    public:
     ScreenAppList(ScreenManager& mgr, core::AppRegistry& registry, core::BootManager& boot_mgr);
 
-    /// @return The underlying LVGL screen object (to be passed to ScreenManager::push).
+    /// @return 底层 LVGL 屏幕对象（传入 ScreenManager::push）。
     lv_obj_t* screen() const { return screen_; }
 
     /// Handle a keyboard navigation event.

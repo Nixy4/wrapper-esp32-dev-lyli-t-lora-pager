@@ -14,7 +14,7 @@ PartitionEsp32::PartitionEsp32(wrapper::Logger& logger) : logger_(logger), part_
 
 bool PartitionEsp32::planInstall(const char* label, size_t image_size, InstallSlot& slot)
 {
-    // ── Case 1: caller requests a specific label (re-install) ────────────────
+    // ── 情况 1：调用方指定了具体标签（重安装）────────────────────────────────────────
     if (label && label[0] != '\0')
     {
         const esp_partition_t* p =
@@ -38,7 +38,7 @@ bool PartitionEsp32::planInstall(const char* label, size_t image_size, InstallSl
         ESP_LOGW(TAG, "Partition '%s' not found; auto-selecting", label);
     }
 
-    // ── Case 2: auto-select the first OTA slot that fits ────────────────────
+    // ── 情况 2：自动选择第一个合适的 OTA 槽位────────────────────────────────────
     constexpr int kMaxOtaSlots = 16;
     for (int i = 0; i < kMaxOtaSlots; ++i)
     {
@@ -46,7 +46,7 @@ bool PartitionEsp32::planInstall(const char* label, size_t image_size, InstallSl
 
         const esp_partition_t* p = esp_partition_find_first(ESP_PARTITION_TYPE_APP, st, nullptr);
         if (!p)
-            break;  // no more OTA slots
+            break;  // 没有更多 OTA 槽位
 
         if (image_size > p->size)
         {
@@ -74,7 +74,7 @@ bool PartitionEsp32::flashBegin(const InstallSlot& slot, size_t image_size)
 {
     if (session_active_)
     {
-        ESP_LOGW(TAG, "OTA session already active — aborting previous");
+        ESP_LOGW(TAG, "OTA 会话已处于活跃状态，中止前一次会话");
         flashAbort();
     }
 

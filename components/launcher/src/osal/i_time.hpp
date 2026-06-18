@@ -6,19 +6,19 @@ namespace launcher::osal
 {
 
 /**
- * @brief Platform-agnostic time abstraction.
+ * @brief 平台无关的时间抽象接口。
  *
- * FreeRTOS implementation: freertos/time_impl.hpp
+ * FreeRTOS 实现： freertos/time_impl.hpp
  */
 class ITime
 {
    public:
     virtual ~ITime() = default;
 
-    /// Block the calling task for at least @p ms milliseconds.
+    /// 阻塞调用任务至少 @p ms 毫秒。
     virtual void delayMs(uint32_t ms) = 0;
 
-    /// Return elapsed milliseconds since boot (wraps at UINT32_MAX).
+    /// 返回自启动以来的毫秒数（超过 UINT32_MAX 后回绕）。
     virtual uint32_t tickMs() = 0;
 };
 

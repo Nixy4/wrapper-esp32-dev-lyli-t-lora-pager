@@ -5,13 +5,13 @@
 
 static const char* TAG = "Launcher|Settings";
 
-// Forward declarations for board brightness (resolved via extern in launcher.cpp)
+// 设置界面中亮度的外部函数声明（由 launcher.cpp 的 extern 解析）
 extern void launcherSetBrightness(int pct);
 
 namespace launcher::ui
 {
 
-// ─── Construction ─────────────────────────────────────────────────────────────
+// ─── 构造 ───────────────────────────────────────────────────────────────────
 
 ScreenSettings::ScreenSettings(ScreenManager& mgr, core::AppRegistry& registry)
     : mgr_(mgr), registry_(registry)
@@ -34,14 +34,14 @@ ScreenSettings::ScreenSettings(ScreenManager& mgr, core::AppRegistry& registry)
     mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
 }
 
-// ─── Widgets ──────────────────────────────────────────────────────────────────
+// ─── 控件 ────────────────────────────────────────────────────────────────────
 
 void ScreenSettings::buildWidgets()
 {
     hal::IDisplay& disp = mgr_.display();
     const int W = disp.width();
 
-    // Title bar
+    // ── 标题栏
     lv_obj_t* bar = lv_obj_create(screen_);
     lv_obj_set_size(bar, W, 30);
     lv_obj_align(bar, LV_ALIGN_TOP_MID, 0, 0);
@@ -75,7 +75,8 @@ void ScreenSettings::buildWidgets()
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    // ── Auto-boot toggle ──────────────────────────────────────────────────────
+    // ── 自动引导开关
+    // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     lv_obj_t* row1 = lv_obj_create(cont);
     lv_obj_set_size(row1, LV_PCT(100), 40);
     lv_obj_set_style_bg_opa(row1, LV_OPA_TRANSP, 0);
@@ -91,7 +92,8 @@ void ScreenSettings::buildWidgets()
     sw_autoboot_ = lv_switch_create(row1);
     lv_obj_add_event_cb(sw_autoboot_, onAutoBootChanged, LV_EVENT_VALUE_CHANGED, this);
 
-    // ── Backlight slider ─────────────────────────────────────────────────────
+    // ── 背光滑动条
+    // ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     lv_obj_t* row2 = lv_obj_create(cont);
     lv_obj_set_size(row2, LV_PCT(100), 50);
     lv_obj_set_style_bg_opa(row2, LV_OPA_TRANSP, 0);
@@ -116,7 +118,7 @@ void ScreenSettings::loadSettings()
 {
     extern hal::IStorage* g_storage;
 
-    // Load auto_boot setting
+    // 加载自动引导设置
     bool auto_boot = true;
     if (g_storage)
     {
@@ -126,7 +128,7 @@ void ScreenSettings::loadSettings()
     }
     lv_obj_set_state(sw_autoboot_, LV_STATE_CHECKED, auto_boot);
 
-    // Load brightness setting
+    // 加载亮度设置
     int brightness = 70;
     if (g_storage)
     {
@@ -154,7 +156,7 @@ void ScreenSettings::saveBrightness(int pct)
     ESP_LOGI(TAG, "brightness = %d%%", pct);
 }
 
-// ─── Input handling ───────────────────────────────────────────────────────────
+// ─── 输入处理 ────────────────────────────────────────────────────────────────
 
 void ScreenSettings::handleInput(const hal::InputEvent& ev)
 {
@@ -162,7 +164,7 @@ void ScreenSettings::handleInput(const hal::InputEvent& ev)
         mgr_.pop();
 }
 
-// ─── LVGL callbacks ───────────────────────────────────────────────────────────
+// ─── LVGL 回调 ───────────────────────────────────────────────────────────────
 
 void ScreenSettings::onBackClicked(lv_event_t* e)
 {
@@ -191,7 +193,7 @@ void ScreenSettings::onBrightnessChanged(lv_event_t* e)
     self->saveBrightness(pct);
 }
 
-// ─── Free helper ─────────────────────────────────────────────────────────────
+// ─── 辅助函数 ────────────────────────────────────────────────────────────────
 
 void pushSettings(ScreenManager& mgr, core::AppRegistry& registry)
 {

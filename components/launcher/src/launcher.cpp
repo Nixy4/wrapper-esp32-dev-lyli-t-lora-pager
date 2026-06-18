@@ -7,20 +7,20 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-// ── Board support (conditional on Kconfig) ────────────────────────────────────
+// ── 板级支持（根据 Kconfig 条件编译）───────────────────────────────────────────────────────────────────────────────────────────────
 #if defined(CONFIG_LAUNCHER_BOARD_LILYGO_T_LORA_PAGER)
 #include "board/lilygo/t-lora-pager.hpp"
 #include "driver/gpio.h"
-// SD card CS pin on T-LoRa Pager (schematic: SDCARD_CS = GPIO21)
+// T-LoRa Pager SD 卡 CS 引脚（原理图：SDCARD_CS = GPIO21）
 static constexpr gpio_num_t kSdCsPin = GPIO_NUM_21;
-// Display physical resolution
+// 显示屏物理分辨率
 static constexpr int kDisplayW = 480;
 static constexpr int kDisplayH = 222;
 #else
 #error "No launcher board selected.  Set CONFIG_LAUNCHER_BOARD_* in Kconfig."
 #endif
 
-// ── OSAL / HAL / Core / UI includes ──────────────────────────────────────────
+// ── OSAL / HAL / Core / UI 头文件包含 ───────────────────────────────────────────────────────────────────────────────────────────────────
 #include "osal/freertos/time_impl.hpp"
 #include "hal/esp32/display_esp32.hpp"
 #include "hal/esp32/input_esp32.hpp"
@@ -34,10 +34,10 @@ static constexpr int kDisplayH = 222;
 
 static const char* TAG = "Launcher";
 
-// ── Module-level globals (file scope) ────────────────────────────────────────
-// These are accessed by screen helpers (screen_sd_browser.cpp,
+// ── 模块级全局变量（文件作用域）───────────────────────────────────────────────────────────────────────────────────────────────────────
+// 由屏幕辅助函数（screen_sd_browser.cpp、screen_settings.cpp）通过 extern 声明访问。
 // screen_settings.cpp) via extern declarations.  They are valid for the
-// lifetime of the launcher task.
+// 生命周期与 launcher 任务相同。
 
 namespace launcher::ui
 {
@@ -45,7 +45,7 @@ hal::IStorage* g_storage = nullptr;
 core::SdInstaller* g_sd_installer = nullptr;
 }  // namespace launcher::ui
 
-// ── Brightness helper (forward-declared by screen_settings.cpp) ──────────────
+// ── 亮度设置辅助函数（由 screen_settings.cpp 前向声明）─────────────────────────────────────────────────────
 
 void launcherSetBrightness(int pct)
 {
@@ -55,7 +55,9 @@ void launcherSetBrightness(int pct)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Core implementation
+// ─────────────────────────────────────────────────────────────────────────────
+//  核心实现
+// ─────────────────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
 
 namespace launcher
@@ -63,8 +65,8 @@ namespace launcher
 
 static void runLauncher(const Config& cfg)
 {
-    // ── 1. Board hardware init ────────────────────────────────────────────────
-    ESP_LOGI(TAG, "Initialising board hardware…");
+    // ── 1. 板级硬件初始化 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    ESP_LOGI(TAG, "初始化板级硬件...");
 
 #if defined(CONFIG_LAUNCHER_BOARD_LILYGO_T_LORA_PAGER)
     auto& board = wrapper::LilyGoLoraPager::GetInstance();
@@ -83,16 +85,16 @@ static void runLauncher(const Config& cfg)
         ESP_LOGW(TAG, "InitKeyboard failed — input disabled");
 #endif
 
-    // ── 2. NVS flash init ─────────────────────────────────────────────────────
+    // ── 2. NVS Flash 初始化 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     esp_err_t nvs_err = nvs_flash_init();
     if (nvs_err == ESP_ERR_NVS_NO_FREE_PAGES || nvs_err == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
-        ESP_LOGW(TAG, "NVS needs erase — reformatting");
+        ESP_LOGW(TAG, "NVS 需要擦除 — 重新格式化");
         nvs_flash_erase();
         nvs_flash_init();
     }
 
-    // ── 3. OSAL / HAL layer creation ──────────────────────────────────────────
+    // ── 3. 创建 OSAL / HAL 层 ─────────────────────────────────────────────────────────────────────────────────────────────────────
 #if defined(CONFIG_LAUNCHER_BOARD_LILYGO_T_LORA_PAGER)
     wrapper::Logger logger_disp("Launcher", "Display");
     wrapper::Logger logger_input("Launcher", "Input");
@@ -113,24 +115,24 @@ static void runLauncher(const Config& cfg)
     hal::PartitionEsp32 partition_hal(logger_part);
 #endif
 
-    // Expose globals for screen helpers
+    // 暴露全局变量给屏幕辅助函数
     ui::g_storage = &storage_hal;
 
-    // ── 4. Display rotation ───────────────────────────────────────────────────
+    // ── 4. 显示方向设置 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     display_hal.setRotation(LV_DISPLAY_ROTATION_180);
     board.SetDisplayBrightness(cfg.brightness);
 
-    // ── 5. Core layer creation ────────────────────────────────────────────────
+    // ── 5. 创建 Core 层 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     core::AppRegistry app_registry(storage_hal);
     core::BootManager boot_mgr(partition_hal, storage_hal, time_impl, app_registry);
     core::SdInstaller sd_installer(storage_hal, partition_hal, app_registry);
     ui::g_sd_installer = &sd_installer;
 
-    // ── 6. SD card mount (best-effort — may not be inserted) ─────────────────
+    // ── 6. 挂载 SD 卡（尽力而为——可能未插入） ─────────────────
     if (!storage_hal.sdMount())
         ESP_LOGW(TAG, "SD card not present at startup");
 
-    // ── 7. Boot decision ──────────────────────────────────────────────────────
+    // ── 7. 启动决策 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     if (cfg.boot_to_last_app)
     {
         std::string last_label;
@@ -138,18 +140,18 @@ static void runLauncher(const Config& cfg)
         {
             ESP_LOGI(TAG, "Auto-booting '%s'", last_label.c_str());
             boot_mgr.bootApp(last_label);
-            // If bootApp returns (setBootPartition failed), fall through to UI
-            ESP_LOGW(TAG, "Auto-boot failed — showing Launcher menu");
+            // bootApp 返回（setBootPartition 失败），继续显示 UI
+            ESP_LOGW(TAG, "自动引导失败 — 显示 Launcher 菜单");
         }
     }
 
-    // ── 8. UI setup ───────────────────────────────────────────────────────────
+    // ── 8. UI 初始化 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     ui::ScreenManager screen_mgr(display_hal, input_hal);
 
     auto* app_list_screen = new ui::ScreenAppList(screen_mgr, app_registry, boot_mgr);
     screen_mgr.push(app_list_screen->screen(), [app_list_screen]() { delete app_list_screen; });
 
-    // ── 9. Input polling task ─────────────────────────────────────────────────
+    // ── 9. 输入轮询任务 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     struct InputTaskArg
     {
         hal::IInput* input;
@@ -168,8 +170,8 @@ static void runLauncher(const Config& cfg)
         },
         "lnch_input", cfg.input_task_stack, input_arg, cfg.input_task_prio, nullptr);
 
-    // ── 10. Main loop ─────────────────────────────────────────────────────────
-    ESP_LOGI(TAG, "Launcher running");
+    // ── 10. 主循环 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    ESP_LOGI(TAG, "Launcher 已启动运行");
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(500));
@@ -177,7 +179,9 @@ static void runLauncher(const Config& cfg)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Public API
+// ─────────────────────────────────────────────────────────────────────────────
+//  公共 API
+// ─────────────────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
 
 void start(const Config& cfg) { runLauncher(cfg); }

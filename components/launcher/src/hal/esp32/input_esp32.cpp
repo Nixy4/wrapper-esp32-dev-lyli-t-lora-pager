@@ -20,13 +20,13 @@ void InputEsp32::setCallback(InputCallback cb)
     kb_.SetKeyCallback(
         [this](const wrapper::LilyGoLoRaPagerKeyEvent& ev)
         {
-            // Only dispatch key-down events
+            // 只分发按键按下事件
             if (!ev.pressed || !user_cb_)
                 return;
 
             InputEvent ie;
             ie.nav = mapKey(ev);
-            // Carry the character only for non-navigation keys
+            // 非导航按键才传递字符
             ie.ch = (ie.nav == NavKey::NONE) ? ev.ch : '\0';
             ie.long_press = false;
 

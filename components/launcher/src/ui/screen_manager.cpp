@@ -14,7 +14,7 @@ ScreenManager::ScreenManager(hal::IDisplay& display, hal::IInput& input)
 
 ScreenManager::~ScreenManager()
 {
-    // Destroy all screens from top to bottom
+    // 从栈顶到栈底销毁所有屏幕
     while (!stack_.empty())
     {
         destroyFrame(stack_.back());

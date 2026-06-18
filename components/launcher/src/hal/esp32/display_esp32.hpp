@@ -8,10 +8,10 @@ namespace launcher::hal
 {
 
 /**
- * @brief IDisplay implementation backed by wrapper::LvglPort.
+ * @brief 基于 wrapper::LvglPort 的 IDisplay 实现。
  *
- * Forwards lock/unlock to LvglPort::Lock/Unlock and exposes the
- * current LVGL screen via lv_scr_act().
+ * 将 lock/unlock 转发给 LvglPort::Lock/Unlock，
+ * 并通过 lv_scr_act() 暴露当前 LVGL 屏幕。
  */
 class DisplayEsp32 : public IDisplay
 {

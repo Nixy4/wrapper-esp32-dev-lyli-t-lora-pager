@@ -10,8 +10,8 @@ namespace launcher::osal
 {
 
 /**
- * @brief FreeRTOS implementation of ITime.
- *        Delegates to wrapper::Delay() and xTaskGetTickCount().
+ * @brief ITime 的 FreeRTOS 实现。
+ *        委托给 wrapper::Delay() 和 xTaskGetTickCount()。
  */
 class FreeRtosTime : public ITime
 {

@@ -8,21 +8,20 @@ namespace launcher::hal
 {
 
 /**
- * @brief IInput implementation for the LilyGo T-LoRa Pager keyboard.
+ * @brief 针对 LilyGo T-LoRa Pager 键盘的 IInput 实现。
  *
- * Wraps wrapper::LilyGoLoRaPagerKeyboard (TCA8418 4×10 matrix) and
- * maps key events to launcher::hal::NavKey:
+ * 封装 wrapper::LilyGoLoRaPagerKeyboard（TCA8418 4×10 矩阵），
+ * 并将按键事件映射到 launcher::hal::NavKey：
  *
- *   Key   | NavKey  | Rationale
- *   ------+---------+----------------------------------
- *   ENT   | SELECT  | Confirm selection
- *   BS    | BACK    | Cancel / go back
- *   i / I | PREV    | Scroll up (vim-style)
- *   k / K | NEXT    | Scroll down (vim-style)
- *   Other | NONE    | Pass-through as char (text input)
+ *   按键  | NavKey  | 说明
+ *   -----+---------+----------------------------------
+ *   ENT  | SELECT  | 确认选择
+ *   BS   | BACK    | 取消/返回
+ *   i/I  | PREV    | 向上滚动（vim 风格）
+ *   k/K  | NEXT    | 向下滚动（vim 风格）
+ *   其他  | NONE    | 直接传递字符（文本输入）
  *
- * Only key-down (pressed) events are dispatched; key-up events are
- * silently discarded.
+ * 只分发按键按下（pressed）事件；按键松开事件会被静默丢弃。
  */
 class InputEsp32 : public IInput
 {
@@ -30,12 +29,12 @@ class InputEsp32 : public IInput
     wrapper::LilyGoLoRaPagerKeyboard kb_;
     InputCallback user_cb_;
 
-    /// Translate a decoded keyboard event to NavKey.
+    /// 将键盘解码事件转换为 NavKey。
     static NavKey mapKey(const wrapper::LilyGoLoRaPagerKeyEvent& ev);
 
    public:
-    /// @param logger  Logger reference.
-    /// @param tca     Already-initialised TCA8418 reference.
+    /// @param logger  日志引用。
+    /// @param tca     已初始化的 TCA8418 引用。
     InputEsp32(wrapper::Logger& logger, wrapper::Tca8418& tca);
 
     void setCallback(InputCallback cb) override;

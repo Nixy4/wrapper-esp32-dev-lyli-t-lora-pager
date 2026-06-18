@@ -10,7 +10,7 @@ static const char* TAG = "Launcher|InstallProg";
 namespace launcher::ui
 {
 
-// ─── Install task ─────────────────────────────────────────────────────────────
+// ─── 安装任务 ────────────────────────────────────────────────────────────────
 
 void ScreenInstallProgress::installTask(void* arg)
 {
@@ -20,7 +20,7 @@ void ScreenInstallProgress::installTask(void* arg)
         self->sd_path_.c_str(), self->display_name_.c_str(),
         [self](const char* stage, size_t written, size_t total)
         {
-            // Update shared progress data
+            // 更新共享的进度数据
             snprintf(self->prog_data_.stage, sizeof(self->prog_data_.stage), "%s", stage);
             self->prog_data_.written = written;
             self->prog_data_.total = total;
@@ -30,7 +30,7 @@ void ScreenInstallProgress::installTask(void* arg)
     vTaskDelete(nullptr);
 }
 
-// ─── LVGL timer tick ─────────────────────────────────────────────────────────
+// ─── LVGL 定时器回调 ─────────────────────────────────────────────────────────
 
 void ScreenInstallProgress::onTimerTick(lv_timer_t* timer)
 {
@@ -38,7 +38,7 @@ void ScreenInstallProgress::onTimerTick(lv_timer_t* timer)
     if (!self)
         return;
 
-    // Update UI from shared progress data
+    // 从共享进度数据更新 UI
     const size_t written = self->prog_data_.written;
     const size_t total = self->prog_data_.total;
     const char* stage = self->prog_data_.stage;
@@ -61,18 +61,18 @@ void ScreenInstallProgress::onTimerTick(lv_timer_t* timer)
 
         if (self->success_)
         {
-            // Show brief success message then pop back twice (to AppList)
+            // 安装完成，稍后返回两级（到应用列表）
             lv_label_set_text(self->stage_lbl_, "Installation complete!");
             lv_bar_set_value(self->bar_, 100, LV_ANIM_OFF);
             lv_label_set_text(self->pct_lbl_, "100%");
 
-            // Delay then navigate back (pop install progress + sd browser)
+            // 延迟后返回（弹出安装进度屏幕 + SD 浏览屏幕）
             lv_timer_t* back_timer = lv_timer_create(
                 [](lv_timer_t* t)
                 {
                     auto* s = static_cast<ScreenInstallProgress*>(lv_timer_get_user_data(t));
                     lv_timer_delete(t);
-                    // Pop twice: install progress screen + sd browser
+                    // 先后弹出：安装进度屏幕 + SD 浏览屏幕
                     s->mgr_.pop();
                     s->mgr_.pop();
                 },
@@ -87,7 +87,7 @@ void ScreenInstallProgress::onTimerTick(lv_timer_t* timer)
     }
 }
 
-// ─── Construction ─────────────────────────────────────────────────────────────
+// ─── 构造 ───────────────────────────────────────────────────────────────────
 
 ScreenInstallProgress::ScreenInstallProgress(ScreenManager& mgr,
                                              core::AppRegistry& registry,
@@ -115,17 +115,17 @@ ScreenInstallProgress::ScreenInstallProgress(ScreenManager& mgr,
     buildWidgets();
     disp.unlock();
 
-    // Disable input during install (BACK is ignored)
+    // 安装期间禁用输入（BACK 键无效）
     mgr_.input().setCallback(nullptr);
 
-    // Launch install task (priority 3, 8KB stack)
+    // 启动安装任务（优先级 3，8KB 栈）
     xTaskCreate(installTask, "lnch_install", 8192, this, 3, &task_handle_);
 
-    // LVGL timer to poll progress every 300 ms
+    // LVGL 定时器每 300ms 轮询进度
     lv_timer_create(onTimerTick, 300, this);
 }
 
-// ─── Widgets ──────────────────────────────────────────────────────────────────
+// ─── 控件 ────────────────────────────────────────────────────────────────────
 
 void ScreenInstallProgress::buildWidgets()
 {
@@ -160,7 +160,7 @@ void ScreenInstallProgress::buildWidgets()
     lv_obj_set_width(stage_lbl_, W - 40);
 }
 
-// ─── Free helper ─────────────────────────────────────────────────────────────
+// ─── 辅助函数 ────────────────────────────────────────────────────────────────
 
 void pushInstallProgress(ScreenManager& mgr,
                          core::AppRegistry& registry,

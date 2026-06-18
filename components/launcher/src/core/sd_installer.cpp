@@ -15,7 +15,7 @@ SdInstaller::SdInstaller(hal::IStorage& storage, hal::IPartition& partition, App
 
 bool SdInstaller::install(const char* sd_path, const char* display_name, InstallProgressCb progress)
 {
-    // ── 1. Open file ──────────────────────────────────────────────────────────
+    // ── 1. 打开文件 ────────────────────────────────────────────────────────────
     size_t file_size = 0;
     if (!storage_.sdFileSize(sd_path, file_size) || file_size == 0)
     {
@@ -31,7 +31,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
         return false;
     }
 
-    // ── 2. Select OTA slot ───────────────────────────────────────────────────
+    // ── 2. 选择 OTA 槽位 ───────────────────────────────────────────────────
     if (progress)
         progress("Selecting slot…", 0, file_size);
 
@@ -43,7 +43,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
         return false;
     }
 
-    // ── 3. Begin OTA session ─────────────────────────────────────────────────
+    // ── 3. 开始 OTA 会话 ─────────────────────────────────────────────────
     if (progress)
         progress("Erasing…", 0, file_size);
 
@@ -54,7 +54,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
         return false;
     }
 
-    // ── 4. Stream firmware chunks ────────────────────────────────────────────
+    // ── 4. 流式传输固件块 ────────────────────────────────────────────────
     static uint8_t buf[kChunkSize];
     size_t written = 0;
     bool ok = true;
@@ -90,7 +90,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
         return false;
     }
 
-    // ── 5. Finalise OTA write ────────────────────────────────────────────────
+    // ── 5. 终结 OTA 写入 ─────────────────────────────────────────────────
     if (progress)
         progress("Verifying…", written, file_size);
 
@@ -100,12 +100,12 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
         return false;
     }
 
-    // ── 6. Register in NVS ───────────────────────────────────────────────────
+    // ── 6. 将应用写入 NVS 注册表 ────────────────────────────────────────
     AppInfo info{slot.label, display_name};
     if (!registry_.save(info))
     {
-        ESP_LOGE(TAG, "Failed to save app registry entry");
-        // Not fatal — partition is flashed correctly
+        ESP_LOGE(TAG, "保存应用注册表条目失败");
+        // 非致命错误——分区已正确刷入
     }
 
     if (progress)

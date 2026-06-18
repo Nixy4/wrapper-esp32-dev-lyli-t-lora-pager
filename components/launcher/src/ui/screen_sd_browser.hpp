@@ -11,22 +11,21 @@ namespace launcher::ui
 {
 
 /**
- * @brief Screen that lists .bin files on the SD card and lets the user
- *        select one to install.
+ * @brief 列出 SD 卡上 .bin 文件的屏幕，允许用户选择一个进行安装。
  *
- * Layout:
+ * 布局：
  *   ┌──────────────────────────────────────────────────────┐
  *   │  [← Back]   SD Card — select firmware to install    │
  *   ├──────────────────────────────────────────────────────┤
  *   │  myapp.bin                                           │
  *   │  anotherapp.bin                                      │
- *   │  (No .bin files found)                               │
+ *   │  (未找到 .bin 文件)                               │
  *   └──────────────────────────────────────────────────────┘
  *
- * Navigation:
- *   NEXT / PREV  → move list selection
- *   SELECT       → begin install of selected file
- *   BACK         → pop back to AppList
+ * 导航操作：
+ *   NEXT / PREV  → 移动列表选中项
+ *   SELECT       → 开始安装所选文件
+ *   BACK         → 返回应用列表
  */
 class ScreenSdBrowser
 {
@@ -54,11 +53,11 @@ class ScreenSdBrowser
     lv_obj_t* screen() const { return screen_; }
     void handleInput(const hal::InputEvent& ev);
 
-    /// Populate the file list (call after construction, before push).
+    /// 填充文件列表（构造完成后、push 之前调用）。
     void setFiles(std::vector<std::string> files) { files_ = std::move(files); }
 };
 
-/// Helper called by ScreenAppList to push this screen without a circular include.
+/// 由 ScreenAppList 调用的辅助函数，避免循环包含。
 void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry);
 
 }  // namespace launcher::ui

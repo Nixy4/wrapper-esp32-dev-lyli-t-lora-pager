@@ -13,13 +13,12 @@ namespace launcher::ui
 {
 
 /**
- * @brief Screen that shows firmware installation progress.
+ * @brief 显示固件安装进度的屏幕。
  *
- * A background FreeRTOS task performs the actual flash write while
- * the LVGL task updates the progress bar and log label.
+ * 后台 FreeRTOS 任务执行实际刷写操作，
+ * 而 LVGL 任务通过定时器轮询更新进度条和日志标签。
  *
- * On completion the screen automatically pops back two levels
- * (to AppList) and triggers a registry refresh.
+ * 完成后屏幕自动返回两级（到应用列表）并触发注册表刷新。
  */
 class ScreenInstallProgress
 {

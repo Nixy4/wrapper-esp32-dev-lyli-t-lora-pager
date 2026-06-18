@@ -11,15 +11,14 @@ namespace launcher::hal
 {
 
 /**
- * @brief IPartition implementation for ESP32.
+ * @brief ESP32 的 IPartition 实现。
  *
- * Uses wrapper::PartitionManager for partition-table operations and
- * esp_ota_*() APIs for raw firmware flashing.
+ * 使用 wrapper::PartitionManager 进行分区表操作，
+ * 使用 esp_ota_*() API 进行原始固件刷写。
  *
- * planInstall() scans the partition table cached by ESP-IDF for existing
- * OTA slots (ota_0, ota_1, …).  The partition table must already contain
- * the target OTA slots (defined in partitions.csv).  Dynamic slot creation
- * is reserved for a future version.
+ * planInstall() 扫描 ESP-IDF 缓存的分区表，搜索现有
+ * OTA 槽位（ota_0、ota_1 等）。目标 OTA 槽位必须已在
+ * partitions.csv 中定义。动态创建槽位留待未来版本支持。
  */
 class PartitionEsp32 : public IPartition
 {

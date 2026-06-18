@@ -9,7 +9,8 @@ static const char* TAG = "Launcher|SdBrowser";
 namespace launcher::ui
 {
 
-// ── Context struct ────────────────────────────────────────────────────────────
+// ── 上下文结构体
+// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 struct SdBrowserCtx
 {
@@ -17,7 +18,7 @@ struct SdBrowserCtx
     int idx;
 };
 
-// ─── Construction ─────────────────────────────────────────────────────────────
+// ─── 构造 ───────────────────────────────────────────────────────────────────
 
 ScreenSdBrowser::ScreenSdBrowser(ScreenManager& mgr,
                                  core::AppRegistry& registry,
@@ -42,14 +43,14 @@ ScreenSdBrowser::ScreenSdBrowser(ScreenManager& mgr,
     mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
 }
 
-// ─── Widgets ──────────────────────────────────────────────────────────────────
+// ─── 控件 ────────────────────────────────────────────────────────────────────
 
 void ScreenSdBrowser::buildWidgets()
 {
     hal::IDisplay& disp = mgr_.display();
     const int W = disp.width();
 
-    // Title bar
+    // ── 标题栏
     lv_obj_t* bar = lv_obj_create(screen_);
     lv_obj_set_size(bar, W, 30);
     lv_obj_align(bar, LV_ALIGN_TOP_MID, 0, 0);
@@ -106,7 +107,7 @@ void ScreenSdBrowser::refreshList()
 
     for (int i = 0; i < static_cast<int>(files_.size()); ++i)
     {
-        // Show only the filename, not the full path
+        // 只显示文件名，不显示完整路径
         const char* slash = strrchr(files_[i].c_str(), '/');
         const char* name = slash ? slash + 1 : files_[i].c_str();
 
@@ -127,7 +128,7 @@ void ScreenSdBrowser::refreshList()
     selected_idx_ = 0;
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────────
+// ─── 输入处理 ────────────────────────────────────────────────────────────────
 
 void ScreenSdBrowser::handleInput(const hal::InputEvent& ev)
 {
@@ -178,10 +179,10 @@ void ScreenSdBrowser::startInstall(int idx)
 
     const std::string& path = files_[idx];
 
-    // Derive display name from filename (strip path and .bin extension)
+    // 从文件名派生显示名称（去除路径和 .bin 扩展名）
     const char* slash = strrchr(path.c_str(), '/');
     std::string name = slash ? slash + 1 : path;
-    // Remove .bin suffix (case-insensitive)
+    // 删除 .bin 后缀（大小写不敏感）
     if (name.size() > 4)
     {
         std::string ext = name.substr(name.size() - 4);
@@ -189,13 +190,13 @@ void ScreenSdBrowser::startInstall(int idx)
             name = name.substr(0, name.size() - 4);
     }
 
-    // Push progress screen
+    // 展示进度屏幕
     extern void pushInstallProgress(ScreenManager&, core::AppRegistry&, core::SdInstaller&,
                                     const std::string&, const std::string&);
     pushInstallProgress(mgr_, registry_, installer_, path, name);
 }
 
-// ─── LVGL callbacks ───────────────────────────────────────────────────────────
+// ─── LVGL 回调 ───────────────────────────────────────────────────────────────
 
 void ScreenSdBrowser::onItemClicked(lv_event_t* e)
 {
@@ -213,10 +214,10 @@ void ScreenSdBrowser::onBackClicked(lv_event_t* e)
         self->mgr_.pop();
 }
 
-// ─── Free helper for forward-declaration push ─────────────────────────────────
+// ─── 前向声明辅助函数 ────────────────────────────────────────────────────────
 
-// Declared in screen_sd_browser.hpp; called by ScreenAppList.
-// launcher.cpp stores g_sd_installer so this function can reach it.
+// 屈名在 screen_sd_browser.hpp 中；由 ScreenAppList 调用。
+// launcher.cpp 存储 g_sd_installer 使本函数可以访问它。
 extern core::SdInstaller* g_sd_installer;
 
 void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry)
@@ -228,7 +229,7 @@ void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry)
     }
 
     auto* scr = new ScreenSdBrowser(mgr, registry, *g_sd_installer);
-    // Populate file list now (storage already mounted by launcher.cpp)
+    // 现在填充文件列表（存储已由 launcher.cpp 挂载）
     extern hal::IStorage* g_storage;
     if (g_storage)
         scr->setFiles(g_storage->sdListFiles(CONFIG_LAUNCHER_SD_MOUNT_POINT, ".bin"));

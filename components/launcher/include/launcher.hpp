@@ -4,42 +4,42 @@
 
 /**
  * @file launcher.hpp
- * @brief Public API for the Launcher component.
+ * @brief Launcher 组件的公共 API。
  *
- * The Launcher manages installed ESP32 applications:
- *   - Displays a list of installed apps and allows booting them
- *   - Browses the SD card for firmware binaries and installs them
- *   - Persists app metadata in NVS
- *   - Provides a settings screen (backlight, auto-boot, etc.)
+ * Launcher 负责管理已安装的 ESP32 应用程序：
+ *   - 显示已安装应用列表，并允许引导启动
+ *   - 浏览 SD 卡中的固件二进制文件并安装
+ *   - 将应用元数据持久化到 NVS
+ *   - 提供设置界面（背光、自动启动等）
  *
- * Architecture:
+ * 架构：
  *   ┌─────────────────────────────────────────┐
- *   │  launcher::start() / startTask()        │  ← Public API (this file)
+ *   │  launcher::start() / startTask()        │  ← 公共 API（本文件）
  *   ├───────────────────────┬─────────────────┤
- *   │       UI Layer        │   Core Layer     │
- *   │  (LVGL screens)       │  (AppRegistry,  │
+ *   │       UI 层           │   Core 层        │
+ *   │  (LVGL 界面)          │  (AppRegistry,  │
  *   │                       │   BootManager,  │
  *   │                       │   SdInstaller)  │
  *   ├───────────────────────┴─────────────────┤
- *   │  HAL Interfaces  │  OSAL Interfaces     │
+ *   │  HAL 接口层      │  OSAL 接口层          │
  *   │  i_display.hpp   │  i_time.hpp          │
  *   │  i_input.hpp     │  i_mutex.hpp         │
  *   │  i_storage.hpp   │                      │
  *   │  i_partition.hpp │                      │
  *   ├──────────────────┴──────────────────────┤
- *   │  HAL ESP32 Impl  │  OSAL FreeRTOS Impl  │
+ *   │  HAL ESP32 实现  │  OSAL FreeRTOS 实现   │
  *   │  (wrapper-esp32  │  (wrapper::Task,     │
  *   │   board/device)  │   wrapper::Delay)    │
  *   └─────────────────────────────────────────┘
  *
- * Usage:
+ * 使用方式：
  * @code
- *   // In app_main():
+ *   // 在 app_main() 中：
  *   launcher::Config cfg;
  *   cfg.boot_to_last_app = true;
- *   launcher::startTask(cfg);   // returns immediately
- *   // ... or:
- *   launcher::start(cfg);       // blocks forever
+ *   launcher::startTask(cfg);   // 立即返回
+ *   // ... 或者：
+ *   launcher::start(cfg);       // 永久阻塞
  * @endcode
  */
 
@@ -47,43 +47,41 @@ namespace launcher
 {
 
 /**
- * @brief Launcher configuration.
+ * @brief Launcher 配置参数。
  */
 struct Config
 {
-    /// If true and a last-booted app is recorded in NVS, boot it on start.
+    /// 若为 true，且 NVS 中记录了上次启动的应用，则启动时自动引导该应用。
     bool boot_to_last_app = true;
 
-    /// Display brightness 0–100 % (applied on init).
+    /// 显示亮度 0–100%（初始化时应用）。
     int brightness = 70;
 
-    /// FreeRTOS stack size (bytes) for the input-polling task.
+    /// 输入轮询任务的 FreeRTOS 栈大小（字节）。
     uint32_t input_task_stack = 4096;
 
-    /// FreeRTOS priority for the input-polling task.
+    /// 输入轮询任务的 FreeRTOS 优先级。
     uint8_t input_task_prio = 4;
 };
 
 /**
- * @brief Start the Launcher in the calling task context.
+ * @brief 在调用任务的上下文中启动 Launcher。
  *
- * Initialises board hardware (if not already done), wires up all
- * HAL/OSAL/Core layers, shows the initial screen, and then blocks
- * indefinitely running the event loop.
+ * 初始化板级硬件（如果尚未完成），连接所有 HAL/OSAL/Core 层，
+ * 显示初始界面，然后永久阻塞运行事件循环。
  *
- * @note Never returns under normal operation.  The device reboots
- *       whenever the user selects an app to boot.
+ * @note 正常情况下永不返回。用户选择应用启动时设备将重启。
  */
 void start(const Config& cfg = {});
 
 /**
- * @brief Spawn a FreeRTOS task that runs the Launcher.
+ * @brief 创建一个运行 Launcher 的 FreeRTOS 任务。
  *
- * Returns immediately; the Launcher runs in the background.
+ * 立即返回，Launcher 在后台运行。
  *
- * @param cfg          Launcher configuration.
- * @param stack_depth  FreeRTOS task stack in bytes (default: 16 KiB).
- * @param priority     FreeRTOS task priority (default: 5).
+ * @param cfg          Launcher 配置参数。
+ * @param stack_depth  FreeRTOS 任务栈大小（字节，默认 16 KiB）。
+ * @param priority     FreeRTOS 任务优先级（默认 5）。
  */
 void startTask(const Config& cfg = {}, uint32_t stack_depth = 16384, uint8_t priority = 5);
 

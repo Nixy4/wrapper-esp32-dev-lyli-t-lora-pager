@@ -11,12 +11,12 @@ namespace launcher::hal
 {
 
 /**
- * @brief IStorage implementation for ESP32.
+ * @brief ESP32 的 IStorage 实现。
  *
- * NVS: uses nvs_flash ESP-IDF API directly.
- * SD:  uses wrapper::SdSpi (SPI-mode SD card via the shared SPI bus).
+ * NVS：直接使用 nvs_flash ESP-IDF API。
+ * SD：使用 wrapper::SdSpi（通过共享 SPI 总线的 SPI 模式 SD 卡）。
  *
- * T-LoRa Pager SD card: CS = GPIO_NUM_21, shared SPI bus (SPI2_HOST).
+ * T-LoRa Pager SD 卡：CS = GPIO_NUM_21，共享 SPI 总线（SPI2_HOST）。
  */
 class StorageEsp32 : public IStorage
 {
@@ -29,10 +29,10 @@ class StorageEsp32 : public IStorage
 
    public:
     /**
-     * @param logger          Logger reference.
-     * @param spi_bus         Already-initialised SPI bus reference.
-     * @param sd_cs_pin       GPIO pin for SD card chip-select.
-     * @param sd_mount_point  VFS mount path (default: CONFIG_LAUNCHER_SD_MOUNT_POINT).
+     * @param logger          日志引用。
+     * @param spi_bus         已初始化的 SPI 总线引用。
+     * @param sd_cs_pin       SD 卡片选 GPIO 引脚。
+     * @param sd_mount_point  VFS 挂载路径（默认：CONFIG_LAUNCHER_SD_MOUNT_POINT）。
      */
     StorageEsp32(wrapper::Logger& logger,
                  wrapper::SpiBus& spi_bus,
@@ -42,12 +42,13 @@ class StorageEsp32 : public IStorage
     ~StorageEsp32() override;
 
     // ── NVS ──────────────────────────────────────────────────────────────────
+
     bool nvsGet(const char* ns, const char* key, std::string& out) override;
     bool nvsSet(const char* ns, const char* key, const std::string& val) override;
     bool nvsDel(const char* ns, const char* key) override;
     bool nvsIterateKeys(const char* ns, std::vector<std::string>& keys) override;
 
-    // ── SD card ──────────────────────────────────────────────────────────────
+    // ── SD 卡 ────────────────────────────────────────────────────────────────
     bool sdMount() override;
     bool sdUnmount() override;
     bool sdAvailable() override { return sd_mounted_; }

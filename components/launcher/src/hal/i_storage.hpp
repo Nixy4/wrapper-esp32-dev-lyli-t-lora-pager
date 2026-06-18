@@ -9,16 +9,16 @@ namespace launcher::hal
 {
 
 /**
- * @brief Platform-agnostic storage abstraction covering NVS and SD card.
+ * @brief 平台无关的存储抽象接口，覆盖 NVS 和 SD 卡。
  *
- * NVS (Non-Volatile Storage) is used for:
- *   - App registry (partition label → display name)
- *   - Launcher settings (last-booted app, brightness, etc.)
+ * NVS（非易失性存储）用于：
+ *   - 应用注册表（分区标签 → 显示名称）
+ *   - Launcher 设置（上次启动的应用、亮度等）
  *
- * SD card is used for:
- *   - Browsing firmware .bin files for installation
+ * SD 卡用于：
+ *   - 浏览待安装的固件 .bin 文件
  *
- * ESP32 implementation: esp32/storage_esp32.hpp
+ * ESP32 实现： esp32/storage_esp32.hpp
  */
 class IStorage
 {
@@ -33,41 +33,41 @@ class IStorage
     /// Write or overwrite a string value.
     virtual bool nvsSet(const char* ns, const char* key, const std::string& val) = 0;
 
-    /// Delete a key.  Returns true even if the key did not exist.
+    /// 删除键。即使键不存在也返回 true。
     virtual bool nvsDel(const char* ns, const char* key) = 0;
 
-    /// List all keys in a namespace.
+    /// 列出命名空间中的所有键。
     virtual bool nvsIterateKeys(const char* ns, std::vector<std::string>& keys) = 0;
 
-    // ── SD card ──────────────────────────────────────────────────────────────
+    // ── SD 卡 ────────────────────────────────────────────────────────────────
 
-    /// Mount the SD card.  Safe to call multiple times.
+    /// 挂载 SD 卡。可重复调用。
     virtual bool sdMount() = 0;
 
-    /// Unmount the SD card.
+    /// 卸载 SD 卡。
     virtual bool sdUnmount() = 0;
 
-    /// @return true if the SD card is currently mounted.
+    /// @return SD 卡当前是否已挂载。
     virtual bool sdAvailable() = 0;
 
     /**
-     * @brief List files matching @p ext in @p dir.
+     * @brief 列出 @p dir 目录中所有符合 @p ext 过滤器的文件。
      *
-     * @param dir  Directory path on the SD card (e.g. "/sdcard").
-     * @param ext  File extension filter including dot (e.g. ".bin").
-     *             Pass nullptr or "" to list all files.
-     * @return Full file paths (e.g. "/sdcard/myapp.bin").
+     * @param dir  SD 卡上的目录路径（如 "/sdcard"）。
+     * @param ext  包含点的文件扩展名过滤器（如 ".bin"）。
+     *             传入 nullptr 或 "" 列出所有文件。
+     * @return 完整文件路径列表（如 "/sdcard/myapp.bin"）。
      */
     virtual std::vector<std::string> sdListFiles(const char* dir, const char* ext) = 0;
 
-    /// Get file size in bytes.  @return false if the file does not exist.
+    /// 获取文件大小（字节）。@return 文件不存在时返回 false。
     virtual bool sdFileSize(const char* path, size_t& out_size) = 0;
 
-    /// Open a file on the SD card for reading.
-    /// Caller must call sdClose() when done.
+    /// 以只读模式打开 SD 卡上的文件。
+    /// 调用方完成后必须调用 sdClose()。
     virtual FILE* sdOpenRead(const char* path) = 0;
 
-    /// Close a file opened with sdOpenRead().
+    /// 关闭由 sdOpenRead() 打开的文件。
     virtual void sdClose(FILE* f) = 0;
 };
 

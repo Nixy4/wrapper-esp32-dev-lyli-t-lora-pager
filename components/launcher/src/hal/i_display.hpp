@@ -2,50 +2,49 @@
 
 #include <cstdint>
 
-// LVGL is the display framework used by the ESP32 HAL implementation.
-// Portable implementations targeting other GUI frameworks should
-// replace lv_obj_t* with their own widget/surface handle.
+// LVGL 是 ESP32 HAL 实现所使用的显示框架。
+// 针对其他 GUI 框架的移植实现应将 lv_obj_t* 替换为自定义的控件/表面句柄。
 #include "lvgl.h"
 
 namespace launcher::hal
 {
 
 /**
- * @brief Platform-agnostic display abstraction.
+ * @brief 平台无关的显示抽象接口。
  *
- * Exposes the minimal surface needed by the Launcher UI:
- *   - Thread-safe lock/unlock (delegated to the underlying framework's mutex)
- *   - Access to the currently-active screen root object
- *   - Screen loading and display rotation
- *   - Display dimensions
+ * 为 Launcher UI 提供所需的最小接口集：
+ *   - 线程安全的加锁/解锁（委托给底层框架的互斥锁）
+ *   - 访问当前激活的屏幕根对象
+ *   - 屏幕加载与旋转设置
+ *   - 显示尺寸获取
  *
- * ESP32 implementation: esp32/display_esp32.hpp
+ * ESP32 实现： esp32/display_esp32.hpp
  */
 class IDisplay
 {
    public:
     virtual ~IDisplay() = default;
 
-    /// Acquire the display mutex.  Must be held while creating/modifying widgets.
-    /// @return true on success, false on timeout.
+    /// 获取显示互斥锁。在创建/修改控件时必须持有此锁。
+    /// @return 成功返回 true，超时返回 false。
     virtual bool lock(uint32_t timeout_ms) = 0;
 
-    /// Release the display mutex.
+    /// 释放显示互斥锁。
     virtual void unlock() = 0;
 
-    /// @return The currently-active LVGL screen (lv_scr_act()).
+    /// @return 当前激活的 LVGL 屏幕（lv_scr_act()）。
     virtual lv_obj_t* activeScreen() = 0;
 
-    /// Load @p screen as the active display.
+    /// 将 @p screen 加载为激活显示屏幕。
     virtual void loadScreen(lv_obj_t* screen) = 0;
 
-    /// Set the display rotation.
+    /// 设置显示方向。
     virtual void setRotation(lv_display_rotation_t rot) = 0;
 
-    /// Display width in pixels.
+    /// 显示宽度（像素）。
     virtual int width() = 0;
 
-    /// Display height in pixels.
+    /// 显示高度（像素）。
     virtual int height() = 0;
 };
 

@@ -10,15 +10,15 @@ static const char* TAG = "Launcher|AppList";
 namespace launcher::ui
 {
 
-// ─── Context structs passed via lv_event user-data ───────────────────────────
+// ─── 通过 lv_event user-data 传递的上下文结构体 ───────────────────────────────────────────────────────────
 
 struct AppListCtx
 {
     ScreenAppList* self;
-    int idx;  // -1 for "SD Install" / "Settings" buttons
+    int idx;  // -1 表示 "SD Install" / "Settings" 按鈕
 };
 
-// ─── Construction ─────────────────────────────────────────────────────────────
+// ─── 构造 ───────────────────────────────────────────────────────────────────
 
 ScreenAppList::ScreenAppList(ScreenManager& mgr,
                              core::AppRegistry& registry,
@@ -45,14 +45,14 @@ ScreenAppList::ScreenAppList(ScreenManager& mgr,
     mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
 }
 
-// ─── Widget construction ──────────────────────────────────────────────────────
+// ─── 控件构建 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 void ScreenAppList::buildWidgets()
 {
     hal::IDisplay& disp = mgr_.display();
     const int W = disp.width();
 
-    // ── Title bar ─────────────────────────────────────────────────────────────
+    // ── 标题栏 ──────────────────────────────────────────────────────────────────
     lv_obj_t* title_bar = lv_obj_create(screen_);
     lv_obj_set_size(title_bar, W, 30);
     lv_obj_align(title_bar, LV_ALIGN_TOP_MID, 0, 0);
@@ -101,7 +101,7 @@ void ScreenAppList::buildWidgets()
     lv_obj_set_style_border_width(list_, 0, 0);
     lv_obj_set_style_radius(list_, 0, 0);
 
-    // ── Status bar ────────────────────────────────────────────────────────────
+    // ── 状态栏 ──────────────────────────────────────────────────────────────────
     status_lbl_ = lv_label_create(screen_);
     lv_obj_set_style_text_font(status_lbl_, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(status_lbl_, lv_color_hex(0x888888), 0);
@@ -131,10 +131,10 @@ void ScreenAppList::refreshList()
         {
             lv_obj_t* btn = lv_list_add_button(list_, LV_SYMBOL_FILE, apps_[i].name.c_str());
             lv_obj_set_style_text_font(lv_obj_get_child(btn, 1), &lv_font_montserrat_14, 0);
-            // Store index in user-data
+            // 将索引存入 user-data
             auto* ctx = new AppListCtx{this, i};
             lv_obj_add_event_cb(btn, onListItemClicked, LV_EVENT_CLICKED, ctx);
-            // Clean up ctx on delete
+            // 删除时清理 ctx
             lv_obj_add_event_cb(
                 btn,
                 [](lv_event_t* e) { delete static_cast<AppListCtx*>(lv_event_get_user_data(e)); },
@@ -156,7 +156,7 @@ void ScreenAppList::updateStatus()
     lv_label_set_text(status_lbl_, buf);
 }
 
-// ─── Input handling ───────────────────────────────────────────────────────────
+// ─── 输入处理 ────────────────────────────────────────────────────────────────
 
 void ScreenAppList::handleInput(const hal::InputEvent& ev)
 {
@@ -206,7 +206,7 @@ void ScreenAppList::confirmBoot(int idx)
     boot_mgr_.bootApp(label);  // calls esp_restart() — does not return
 }
 
-// ─── LVGL event callbacks ────────────────────────────────────────────────────
+// ─── LVGL 事件回调 ───────────────────────────────────────────────────────────
 
 void ScreenAppList::onListItemClicked(lv_event_t* e)
 {
@@ -223,9 +223,8 @@ void ScreenAppList::onSdInstallClicked(lv_event_t* e)
     if (!self)
         return;
 
-    // Forward navigation to ScreenSdBrowser is done via a forward declaration.
-    // We call a free function defined in screen_sd_browser.cpp to avoid
-    // circular headers between screen files.
+    // 跳转到 ScreenSdBrowser 的导航通过前向声明实现。
+    // 我们调用在 screen_sd_browser.cpp 中定义的自由函数，避免屏幕文件间的循环包含。
     extern void pushSdBrowser(ScreenManager&, core::AppRegistry&);
     pushSdBrowser(self->mgr_, self->registry_);
 }

@@ -9,22 +9,22 @@ namespace launcher::core
 {
 
 /**
- * @brief Metadata for an installed application.
+ * @brief 已安装应用程序的元数据。
  */
 struct AppInfo
 {
-    std::string label;  ///< Physical OTA partition label (e.g. "ota_0")
-    std::string name;   ///< User-visible display name
+    std::string label;  ///< 物理 OTA 分区标签（如 "ota_0"）
+    std::string name;   ///< 用户可见的显示名称
 };
 
 /**
- * @brief NVS-backed registry of installed applications.
+ * @brief NVS 支持的已安装应用注册表。
  *
- * NVS schema (namespace CONFIG_LAUNCHER_NVS_APP_NS, default "l_apps"):
- *   key = partition label (e.g. "ota_0")
- *   value = display name (e.g. "My App")
+ * NVS 模式（命名空间 CONFIG_LAUNCHER_NVS_APP_NS，默认 "l_apps"）：
+ *   key = 分区标签（如 "ota_0"）
+ *   value = 显示名称（如 "My App"）
  *
- * Settings are stored in a separate namespace (CONFIG_LAUNCHER_NVS_CFG_NS).
+ * 设置存储在单独的命名空间（CONFIG_LAUNCHER_NVS_CFG_NS）中。
  */
 class AppRegistry
 {
@@ -37,20 +37,20 @@ class AppRegistry
                 const char* app_ns = CONFIG_LAUNCHER_NVS_APP_NS,
                 const char* cfg_ns = CONFIG_LAUNCHER_NVS_CFG_NS);
 
-    /// Load all registered apps from NVS into @p apps.
+    /// 从 NVS 加载所有已注册的应用到 @p apps。
     bool load(std::vector<AppInfo>& apps);
 
-    /// Persist an app entry (insert or update).
+    /// 持久化一个应用条目（插入或更新）。
     bool save(const AppInfo& app);
 
-    /// Remove an app entry by partition label.
+    /// 按分区标签删除一个应用条目。
     bool remove(const std::string& label);
 
-    /// Record the most-recently-booted partition label.
+    /// 记录最近一次引导的分区标签。
     bool setLastBooted(const std::string& label);
 
-    /// Retrieve the most-recently-booted partition label.
-    /// Returns false (and leaves @p label unchanged) if no entry exists.
+    /// 获取最近一次引导的分区标签。
+    /// 类目不存在时返回 false，@p label 不变。
     bool getLastBooted(std::string& label);
 };
 

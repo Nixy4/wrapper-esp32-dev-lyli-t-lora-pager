@@ -7,16 +7,16 @@ namespace launcher::ui
 {
 
 /**
- * @brief Settings screen.
+ * @brief 设置屏幕。
  *
- * Currently exposes:
- *   - Auto-boot toggle (saved as NVS key "auto_boot" in l_cfg namespace)
- *   - Backlight brightness slider 10–100%
+ * 当前暴露的设置项：
+ *   - 自动引导开关（保存为 NVS 键 "auto_boot"，位于 l_cfg 命名空间）
+ *   - 背光亮度滑动条 10–100%
  *
- * Navigation:
- *   NEXT / PREV  → move between settings items
- *   SELECT       → toggle / confirm
- *   BACK         → pop back to AppList
+ * 导航操作：
+ *   NEXT / PREV  → 在设置项之间移动
+ *   SELECT       → 切换/确认
+ *   BACK         → 返回应用列表
  */
 class ScreenSettings
 {
@@ -42,7 +42,7 @@ class ScreenSettings
     void handleInput(const hal::InputEvent& ev);
 };
 
-/// Helper called by ScreenAppList to push this screen.
+/// 由 ScreenAppList 调用的辅助函数，将此屏幕压入栈。
 void pushSettings(ScreenManager& mgr, core::AppRegistry& registry);
 
 }  // namespace launcher::ui

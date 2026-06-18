@@ -21,7 +21,4 @@ extern "C" void app_main(void)
 
     // startTask() returns immediately; the Launcher runs in its own task.
     launcher::startTask(cfg, 24576, 5);
-
-    // app_main must not return — block here.
-    while (true) vTaskDelay(pdMS_TO_TICKS(10000));
 }

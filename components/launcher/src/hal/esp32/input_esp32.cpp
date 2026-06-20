@@ -13,7 +13,7 @@ InputEsp32::InputEsp32(wrapper::Logger& logger, wrapper::Tca8418& tca)
 {
 }
 
-void InputEsp32::setCallback(InputCallback cb)
+void InputEsp32::SetCallback(InputCallback cb)
 {
     user_cb_ = std::move(cb);
 
@@ -25,33 +25,33 @@ void InputEsp32::setCallback(InputCallback cb)
                 return;
 
             InputEvent ie;
-            ie.nav = mapKey(ev);
+            ie.nav = MapKey(ev);
             // 非导航按键才传递字符
-            ie.ch = (ie.nav == NavKey::NONE) ? ev.ch : '\0';
+            ie.ch = (ie.nav == NavKey::None) ? ev.ch : '\0';
             ie.long_press = false;
 
             user_cb_(ie);
         });
 }
 
-void InputEsp32::poll() { kb_.Poll(); }
+void InputEsp32::Poll() { kb_.Poll(); }
 
 // static
-NavKey InputEsp32::mapKey(const wrapper::LilyGoLoRaPagerKeyEvent& ev)
+NavKey InputEsp32::MapKey(const wrapper::LilyGoLoRaPagerKeyEvent& ev)
 {
     if (ev.ch == '\n')
-        return NavKey::SELECT;
+        return NavKey::Select;
     if (ev.ch == '\b')
-        return NavKey::BACK;
+        return NavKey::Back;
 
     const char lc = static_cast<char>(tolower(static_cast<unsigned char>(ev.ch)));
 
     if (lc == 'i')
-        return NavKey::PREV;
+        return NavKey::Prev;
     if (lc == 'k')
-        return NavKey::NEXT;
+        return NavKey::Next;
 
-    return NavKey::NONE;
+    return NavKey::None;
 }
 
 }  // namespace launcher::hal

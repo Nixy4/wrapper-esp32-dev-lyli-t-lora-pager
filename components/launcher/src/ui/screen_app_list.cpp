@@ -10,7 +10,8 @@ static const char* TAG = "Launcher|AppList";
 namespace launcher::ui
 {
 
-// ─── 通过 lv_event user-data 传递的上下文结构体 ───────────────────────────────────────────────────────────
+// ─── 通过 lv_event user-data 传递的上下文结构体
+// ───────────────────────────────────────────────────────────
 
 struct AppListCtx
 {
@@ -25,9 +26,9 @@ ScreenAppList::ScreenAppList(ScreenManager& mgr,
                              core::BootManager& boot_mgr)
     : mgr_(mgr), registry_(registry), boot_mgr_(boot_mgr)
 {
-    hal::IDisplay& disp = mgr_.display();
+    hal::IDisplay& disp = mgr_.Display();
 
-    if (!disp.lock(1000))
+    if (!disp.Lock(1000))
     {
         ESP_LOGE(TAG, "Lock timeout — cannot build AppList screen");
         return;
@@ -37,20 +38,21 @@ ScreenAppList::ScreenAppList(ScreenManager& mgr,
     lv_obj_set_style_bg_color(screen_, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_bg_opa(screen_, LV_OPA_COVER, 0);
 
-    buildWidgets();
+    BuildWidgets();
 
-    disp.unlock();
+    disp.Unlock();
 
     // Register input handler
-    mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
+    mgr_.Input().SetCallback([this](const hal::InputEvent& ev) { HandleInput(ev); });
 }
 
-// ─── 控件构建 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ─── 控件构建
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-void ScreenAppList::buildWidgets()
+void ScreenAppList::BuildWidgets()
 {
-    hal::IDisplay& disp = mgr_.display();
-    const int W = disp.width();
+    hal::IDisplay& disp = mgr_.Display();
+    const int W = disp.Width();
 
     // ── 标题栏 ──────────────────────────────────────────────────────────────────
     lv_obj_t* title_bar = lv_obj_create(screen_);
@@ -78,7 +80,7 @@ void ScreenAppList::buildWidgets()
     lv_obj_set_style_text_font(btn_sd_lbl, &lv_font_montserrat_14, 0);
     lv_obj_center(btn_sd_lbl);
 
-    lv_obj_add_event_cb(btn_sd, onSdInstallClicked, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(btn_sd, OnSdInstallClicked, LV_EVENT_CLICKED, this);
 
     // ── "Settings" button ─────────────────────────────────────────────────────
     lv_obj_t* btn_set = lv_button_create(title_bar);
@@ -91,11 +93,11 @@ void ScreenAppList::buildWidgets()
     lv_obj_set_style_text_font(btn_set_lbl, &lv_font_montserrat_14, 0);
     lv_obj_center(btn_set_lbl);
 
-    lv_obj_add_event_cb(btn_set, onSettingsClicked, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(btn_set, OnSettingsClicked, LV_EVENT_CLICKED, this);
 
     // ── Scrollable app list ───────────────────────────────────────────────────
     list_ = lv_list_create(screen_);
-    lv_obj_set_size(list_, W, disp.height() - 50);
+    lv_obj_set_size(list_, W, disp.Height() - 50);
     lv_obj_align(list_, LV_ALIGN_TOP_MID, 0, 32);
     lv_obj_set_style_bg_color(list_, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_border_width(list_, 0, 0);
@@ -107,15 +109,15 @@ void ScreenAppList::buildWidgets()
     lv_obj_set_style_text_color(status_lbl_, lv_color_hex(0x888888), 0);
     lv_obj_align(status_lbl_, LV_ALIGN_BOTTOM_LEFT, 4, -2);
 
-    refreshList();
+    RefreshList();
 }
 
-void ScreenAppList::refreshList()
+void ScreenAppList::RefreshList()
 {
     if (!list_)
         return;
 
-    registry_.load(apps_);
+    registry_.Load(apps_);
 
     // Clear existing items
     lv_obj_clean(list_);
@@ -133,7 +135,7 @@ void ScreenAppList::refreshList()
             lv_obj_set_style_text_font(lv_obj_get_child(btn, 1), &lv_font_montserrat_14, 0);
             // 将索引存入 user-data
             auto* ctx = new AppListCtx{this, i};
-            lv_obj_add_event_cb(btn, onListItemClicked, LV_EVENT_CLICKED, ctx);
+            lv_obj_add_event_cb(btn, OnListItemClicked, LV_EVENT_CLICKED, ctx);
             // 删除时清理 ctx
             lv_obj_add_event_cb(
                 btn,
@@ -142,11 +144,11 @@ void ScreenAppList::refreshList()
         }
     }
 
-    updateStatus();
+    UpdateStatus();
     selected_idx_ = 0;
 }
 
-void ScreenAppList::updateStatus()
+void ScreenAppList::UpdateStatus()
 {
     if (!status_lbl_)
         return;
@@ -158,43 +160,43 @@ void ScreenAppList::updateStatus()
 
 // ─── 输入处理 ────────────────────────────────────────────────────────────────
 
-void ScreenAppList::handleInput(const hal::InputEvent& ev)
+void ScreenAppList::HandleInput(const hal::InputEvent& ev)
 {
     if (apps_.empty())
         return;
 
-    hal::IDisplay& disp = mgr_.display();
+    hal::IDisplay& disp = mgr_.Display();
 
-    if (ev.nav == hal::NavKey::NEXT)
+    if (ev.nav == hal::NavKey::Next)
     {
         selected_idx_ = (selected_idx_ + 1) % static_cast<int>(apps_.size());
-        if (disp.lock(100))
+        if (disp.Lock(100))
         {
             lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
             if (btn)
                 lv_obj_scroll_to_view(btn, LV_ANIM_ON);
-            disp.unlock();
+            disp.Unlock();
         }
     }
-    else if (ev.nav == hal::NavKey::PREV)
+    else if (ev.nav == hal::NavKey::Prev)
     {
         selected_idx_ =
             (selected_idx_ - 1 + static_cast<int>(apps_.size())) % static_cast<int>(apps_.size());
-        if (disp.lock(100))
+        if (disp.Lock(100))
         {
             lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
             if (btn)
                 lv_obj_scroll_to_view(btn, LV_ANIM_ON);
-            disp.unlock();
+            disp.Unlock();
         }
     }
-    else if (ev.nav == hal::NavKey::SELECT)
+    else if (ev.nav == hal::NavKey::Select)
     {
-        confirmBoot(selected_idx_);
+        ConfirmBoot(selected_idx_);
     }
 }
 
-void ScreenAppList::confirmBoot(int idx)
+void ScreenAppList::ConfirmBoot(int idx)
 {
     if (idx < 0 || idx >= static_cast<int>(apps_.size()))
         return;
@@ -203,19 +205,19 @@ void ScreenAppList::confirmBoot(int idx)
     const std::string& name = apps_[idx].name;
 
     ESP_LOGI(TAG, "User selected app: '%s' ('%s')", name.c_str(), label.c_str());
-    boot_mgr_.bootApp(label);  // calls esp_restart() — does not return
+    boot_mgr_.BootApp(label);  // calls esp_restart() — does not return
 }
 
 // ─── LVGL 事件回调 ───────────────────────────────────────────────────────────
 
-void ScreenAppList::onListItemClicked(lv_event_t* e)
+void ScreenAppList::OnListItemClicked(lv_event_t* e)
 {
     auto* ctx = static_cast<AppListCtx*>(lv_event_get_user_data(e));
     if (ctx && lv_event_get_code(e) == LV_EVENT_CLICKED)
-        ctx->self->confirmBoot(ctx->idx);
+        ctx->self->ConfirmBoot(ctx->idx);
 }
 
-void ScreenAppList::onSdInstallClicked(lv_event_t* e)
+void ScreenAppList::OnSdInstallClicked(lv_event_t* e)
 {
     if (lv_event_get_code(e) != LV_EVENT_CLICKED)
         return;
@@ -225,11 +227,11 @@ void ScreenAppList::onSdInstallClicked(lv_event_t* e)
 
     // 跳转到 ScreenSdBrowser 的导航通过前向声明实现。
     // 我们调用在 screen_sd_browser.cpp 中定义的自由函数，避免屏幕文件间的循环包含。
-    extern void pushSdBrowser(ScreenManager&, core::AppRegistry&);
-    pushSdBrowser(self->mgr_, self->registry_);
+    extern void PushSdBrowser(ScreenManager&, core::AppRegistry&);
+    PushSdBrowser(self->mgr_, self->registry_);
 }
 
-void ScreenAppList::onSettingsClicked(lv_event_t* e)
+void ScreenAppList::OnSettingsClicked(lv_event_t* e)
 {
     if (lv_event_get_code(e) != LV_EVENT_CLICKED)
         return;
@@ -237,8 +239,8 @@ void ScreenAppList::onSettingsClicked(lv_event_t* e)
     if (!self)
         return;
 
-    extern void pushSettings(ScreenManager&, core::AppRegistry&);
-    pushSettings(self->mgr_, self->registry_);
+    extern void PushSettings(ScreenManager&, core::AppRegistry&);
+    PushSettings(self->mgr_, self->registry_);
 }
 
 }  // namespace launcher::ui

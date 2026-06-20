@@ -24,13 +24,13 @@ class FreeRtosMutex : public IMutex
             vSemaphoreDelete(handle_);
     }
 
-    bool lock(uint32_t timeout_ms = UINT32_MAX) override
+    bool Lock(uint32_t timeout_ms = UINT32_MAX) override
     {
         TickType_t ticks = (timeout_ms == UINT32_MAX) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
         return xSemaphoreTake(handle_, ticks) == pdTRUE;
     }
 
-    void unlock() override { xSemaphoreGive(handle_); }
+    void Unlock() override { xSemaphoreGive(handle_); }
 };
 
 }  // namespace launcher::osal

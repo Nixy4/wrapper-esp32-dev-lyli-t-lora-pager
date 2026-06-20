@@ -20,7 +20,7 @@ using InstallProgressCb = std::function<void(const char* stage, size_t written, 
  * @brief 将 SD 卡上的固件二进制安装到 OTA 槽位。
  *
  * 典型调用时序：
- *   1. sdInstaller.install(sd_path, display_name, progress_cb)
+ *   1. sdInstaller.Install(sd_path, display_name, progress_cb)
  *      → 内部调用 IPartition::planInstall / flashBegin / flashWrite / flashEnd
  *      → 然后将（分区标签 → display_name）保存到 AppRegistry
  *
@@ -45,7 +45,7 @@ class SdInstaller
      * @param progress     可选的进度回调。
      * @return 成功返回 true；任何错误自动中止 OTA 并返回 false。
      */
-    bool install(const char* sd_path,
+    bool Install(const char* sd_path,
                  const char* display_name,
                  InstallProgressCb progress = nullptr);
 };

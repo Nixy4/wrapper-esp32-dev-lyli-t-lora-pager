@@ -12,11 +12,11 @@ namespace launcher::ui
 
 // ─── 安装任务 ────────────────────────────────────────────────────────────────
 
-void ScreenInstallProgress::installTask(void* arg)
+void ScreenInstallProgress::InstallTask(void* arg)
 {
     auto* self = static_cast<ScreenInstallProgress*>(arg);
 
-    self->success_ = self->installer_.install(
+    self->success_ = self->installer_.Install(
         self->sd_path_.c_str(), self->display_name_.c_str(),
         [self](const char* stage, size_t written, size_t total)
         {
@@ -32,7 +32,7 @@ void ScreenInstallProgress::installTask(void* arg)
 
 // ─── LVGL 定时器回调 ─────────────────────────────────────────────────────────
 
-void ScreenInstallProgress::onTimerTick(lv_timer_t* timer)
+void ScreenInstallProgress::OnTimerTick(lv_timer_t* timer)
 {
     auto* self = static_cast<ScreenInstallProgress*>(lv_timer_get_user_data(timer));
     if (!self)
@@ -73,8 +73,8 @@ void ScreenInstallProgress::onTimerTick(lv_timer_t* timer)
                     auto* s = static_cast<ScreenInstallProgress*>(lv_timer_get_user_data(t));
                     lv_timer_delete(t);
                     // 先后弹出：安装进度屏幕 + SD 浏览屏幕
-                    s->mgr_.pop();
-                    s->mgr_.pop();
+                    s->mgr_.Pop();
+                    s->mgr_.Pop();
                 },
                 1500, self);
             lv_timer_set_repeat_count(back_timer, 1);
@@ -100,9 +100,9 @@ ScreenInstallProgress::ScreenInstallProgress(ScreenManager& mgr,
       sd_path_(sd_path),
       display_name_(display_name)
 {
-    hal::IDisplay& disp = mgr_.display();
+    hal::IDisplay& disp = mgr_.Display();
 
-    if (!disp.lock(1000))
+    if (!disp.Lock(1000))
     {
         ESP_LOGE(TAG, "Lock timeout");
         return;
@@ -112,26 +112,26 @@ ScreenInstallProgress::ScreenInstallProgress(ScreenManager& mgr,
     lv_obj_set_style_bg_color(screen_, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_bg_opa(screen_, LV_OPA_COVER, 0);
 
-    buildWidgets();
-    disp.unlock();
+    BuildWidgets();
+    disp.Unlock();
 
     // 安装期间禁用输入（BACK 键无效）
-    mgr_.input().setCallback(nullptr);
+    mgr_.Input().SetCallback(nullptr);
 
     // 启动安装任务（优先级 3，8KB 栈）
-    xTaskCreate(installTask, "lnch_install", 8192, this, 3, &task_handle_);
+    xTaskCreate(InstallTask, "lnch_install", 8192, this, 3, &task_handle_);
 
     // LVGL 定时器每 300ms 轮询进度
-    lv_timer_create(onTimerTick, 300, this);
+    lv_timer_create(OnTimerTick, 300, this);
 }
 
 // ─── 控件 ────────────────────────────────────────────────────────────────────
 
-void ScreenInstallProgress::buildWidgets()
+void ScreenInstallProgress::BuildWidgets()
 {
-    hal::IDisplay& disp = mgr_.display();
-    const int W = disp.width();
-    const int H = disp.height();
+    hal::IDisplay& disp = mgr_.Display();
+    const int W = disp.Width();
+    const int H = disp.Height();
 
     lv_obj_t* title = lv_label_create(screen_);
     lv_label_set_text_fmt(title, "Installing: %s", display_name_.c_str());
@@ -162,14 +162,14 @@ void ScreenInstallProgress::buildWidgets()
 
 // ─── 辅助函数 ────────────────────────────────────────────────────────────────
 
-void pushInstallProgress(ScreenManager& mgr,
+void PushInstallProgress(ScreenManager& mgr,
                          core::AppRegistry& registry,
                          core::SdInstaller& installer,
                          const std::string& sd_path,
                          const std::string& display_name)
 {
     auto* scr = new ScreenInstallProgress(mgr, registry, installer, sd_path, display_name);
-    mgr.push(scr->screen(), [scr]() { delete scr; });
+    mgr.Push(scr->Screen(), [scr]() { delete scr; });
 }
 
 }  // namespace launcher::ui

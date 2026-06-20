@@ -17,18 +17,18 @@ ScreenManager::~ScreenManager()
     // 从栈顶到栈底销毁所有屏幕
     while (!stack_.empty())
     {
-        destroyFrame(stack_.back());
+        DestroyFrame(stack_.back());
         stack_.pop_back();
     }
 }
 
-void ScreenManager::push(lv_obj_t* screen, DestroyCallback on_destroy)
+void ScreenManager::Push(lv_obj_t* screen, DestroyCallback on_destroy)
 {
     stack_.push_back({screen, std::move(on_destroy)});
-    loadTop();
+    LoadTop();
 }
 
-void ScreenManager::pop()
+void ScreenManager::Pop()
 {
     if (stack_.size() <= 1)
     {
@@ -36,23 +36,23 @@ void ScreenManager::pop()
         return;
     }
 
-    destroyFrame(stack_.back());
+    DestroyFrame(stack_.back());
     stack_.pop_back();
-    loadTop();
+    LoadTop();
 }
 
-void ScreenManager::replace(lv_obj_t* screen, DestroyCallback on_destroy)
+void ScreenManager::Replace(lv_obj_t* screen, DestroyCallback on_destroy)
 {
     if (!stack_.empty())
     {
-        destroyFrame(stack_.back());
+        DestroyFrame(stack_.back());
         stack_.pop_back();
     }
     stack_.push_back({screen, std::move(on_destroy)});
-    loadTop();
+    LoadTop();
 }
 
-void ScreenManager::loadTop()
+void ScreenManager::LoadTop()
 {
     if (stack_.empty())
         return;
@@ -61,10 +61,10 @@ void ScreenManager::loadTop()
     if (!scr)
         return;
 
-    if (display_.lock(500))
+    if (display_.Lock(500))
     {
-        display_.loadScreen(scr);
-        display_.unlock();
+        display_.LoadScreen(scr);
+        display_.Unlock();
     }
     else
     {
@@ -72,17 +72,17 @@ void ScreenManager::loadTop()
     }
 }
 
-void ScreenManager::destroyFrame(Frame& frame)
+void ScreenManager::DestroyFrame(Frame& frame)
 {
     if (frame.on_destroy)
         frame.on_destroy();
 
     if (frame.screen)
     {
-        if (display_.lock(200))
+        if (display_.Lock(200))
         {
             lv_obj_del(frame.screen);
-            display_.unlock();
+            display_.Unlock();
         }
         frame.screen = nullptr;
     }

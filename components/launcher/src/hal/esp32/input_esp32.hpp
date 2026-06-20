@@ -30,15 +30,15 @@ class InputEsp32 : public IInput
     InputCallback user_cb_;
 
     /// 将键盘解码事件转换为 NavKey。
-    static NavKey mapKey(const wrapper::LilyGoLoRaPagerKeyEvent& ev);
+    static NavKey MapKey(const wrapper::LilyGoLoRaPagerKeyEvent& ev);
 
    public:
     /// @param logger  日志引用。
     /// @param tca     已初始化的 TCA8418 引用。
     InputEsp32(wrapper::Logger& logger, wrapper::Tca8418& tca);
 
-    void setCallback(InputCallback cb) override;
-    void poll() override;
+    void SetCallback(InputCallback cb) override;
+    void Poll() override;
 };
 
 }  // namespace launcher::hal

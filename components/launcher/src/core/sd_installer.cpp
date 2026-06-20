@@ -9,22 +9,24 @@ namespace launcher::core
 {
 
 SdInstaller::SdInstaller(hal::IStorage& storage, hal::IPartition& partition, AppRegistry& registry)
-    : storage_(storage), partition_(partition), registry_(registry)
+    : storage_(storage),
+      partition_(partition),
+      registry_(registry)
 {
 }
 
-bool SdInstaller::install(const char* sd_path, const char* display_name, InstallProgressCb progress)
+bool SdInstaller::Install(const char* sd_path, const char* display_name, InstallProgressCb progress)
 {
     // ── 1. 打开文件 ────────────────────────────────────────────────────────────
     size_t file_size = 0;
-    if (!storage_.sdFileSize(sd_path, file_size) || file_size == 0)
+    if (!storage_.SdFileSize(sd_path, file_size) || file_size == 0)
     {
         ESP_LOGE(TAG, "Cannot stat '%s'", sd_path);
         return false;
     }
     ESP_LOGI(TAG, "Installing '%s' (%zu B) as '%s'", sd_path, file_size, display_name);
 
-    FILE* f = storage_.sdOpenRead(sd_path);
+    FILE* f = storage_.SdOpenRead(sd_path);
     if (!f)
     {
         ESP_LOGE(TAG, "Cannot open '%s' for reading", sd_path);
@@ -36,10 +38,10 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
         progress("Selecting slot…", 0, file_size);
 
     hal::InstallSlot slot;
-    if (!partition_.planInstall(nullptr, file_size, slot))
+    if (!partition_.PlanInstall(nullptr, file_size, slot))
     {
         ESP_LOGE(TAG, "No suitable OTA slot for %zu B", file_size);
-        storage_.sdClose(f);
+        storage_.SdClose(f);
         return false;
     }
 
@@ -47,10 +49,10 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
     if (progress)
         progress("Erasing…", 0, file_size);
 
-    if (!partition_.flashBegin(slot, file_size))
+    if (!partition_.FlashBegin(slot, file_size))
     {
         ESP_LOGE(TAG, "flashBegin failed");
-        storage_.sdClose(f);
+        storage_.SdClose(f);
         return false;
     }
 
@@ -70,7 +72,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
             break;
         }
 
-        if (!partition_.flashWrite(buf, got))
+        if (!partition_.FlashWrite(buf, got))
         {
             ESP_LOGE(TAG, "flashWrite failed at offset %zu", written);
             ok = false;
@@ -82,11 +84,11 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
             progress("Writing…", written, file_size);
     }
 
-    storage_.sdClose(f);
+    storage_.SdClose(f);
 
     if (!ok)
     {
-        partition_.flashAbort();
+        partition_.FlashAbort();
         return false;
     }
 
@@ -94,7 +96,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
     if (progress)
         progress("Verifying…", written, file_size);
 
-    if (!partition_.flashEnd())
+    if (!partition_.FlashEnd())
     {
         ESP_LOGE(TAG, "flashEnd failed (image invalid?)");
         return false;
@@ -102,7 +104,7 @@ bool SdInstaller::install(const char* sd_path, const char* display_name, Install
 
     // ── 6. 将应用写入 NVS 注册表 ────────────────────────────────────────
     AppInfo info{slot.label, display_name};
-    if (!registry_.save(info))
+    if (!registry_.Save(info))
     {
         ESP_LOGE(TAG, "保存应用注册表条目失败");
         // 非致命错误——分区已正确刷入

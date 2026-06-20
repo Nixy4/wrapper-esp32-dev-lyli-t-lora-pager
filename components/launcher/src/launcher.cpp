@@ -51,7 +51,7 @@ core::SdInstaller* g_sd_installer = nullptr;
 // ── 亮度设置辅助函数（由 screen_settings.cpp
 // 前向声明）─────────────────────────────────────────────────────
 
-void launcherSetBrightness(int pct)
+void LauncherSetBrightness(int pct)
 {
 #if defined(CONFIG_LAUNCHER_BOARD_LILYGO_T_LORA_PAGER)
     wrapper::LilyGoLoraPager::GetInstance().SetDisplayBrightness(pct);
@@ -67,7 +67,7 @@ void launcherSetBrightness(int pct)
 namespace launcher
 {
 
-static void runLauncher(const Config& cfg)
+static void RunLauncher(const Config& cfg)
 {
     // ── 1. 板级硬件初始化
     // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ static void runLauncher(const Config& cfg)
 
     // ── 4. 显示方向设置
     // ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    display_hal.setRotation(LV_DISPLAY_ROTATION_180);
+    display_hal.SetRotation(LV_DISPLAY_ROTATION_180);
     board.SetDisplayBrightness(cfg.brightness);
 
     // ── 5. 创建 Core 层
@@ -141,7 +141,7 @@ static void runLauncher(const Config& cfg)
     ui::g_sd_installer = &sd_installer;
 
     // ── 6. 挂载 SD 卡（尽力而为——可能未插入） ─────────────────
-    if (!storage_hal.sdMount())
+    if (!storage_hal.SdMount())
         ESP_LOGW(TAG, "SD card not present at startup");
 
     // ── 7. 启动决策
@@ -149,10 +149,10 @@ static void runLauncher(const Config& cfg)
     if (cfg.boot_to_last_app)
     {
         std::string last_label;
-        if (!boot_mgr.shouldShowMenu(last_label))
+        if (!boot_mgr.ShouldShowMenu(last_label))
         {
             ESP_LOGI(TAG, "Auto-booting '%s'", last_label.c_str());
-            boot_mgr.bootApp(last_label);
+            boot_mgr.BootApp(last_label);
             // bootApp 返回（setBootPartition 失败），继续显示 UI
             ESP_LOGW(TAG, "自动引导失败 — 显示 Launcher 菜单");
         }
@@ -163,7 +163,7 @@ static void runLauncher(const Config& cfg)
     ui::ScreenManager screen_mgr(display_hal, input_hal);
 
     auto* app_list_screen = new ui::ScreenAppList(screen_mgr, app_registry, boot_mgr);
-    screen_mgr.push(app_list_screen->screen(), [app_list_screen]() { delete app_list_screen; });
+    screen_mgr.Push(app_list_screen->Screen(), [app_list_screen]() { delete app_list_screen; });
 
     // ── 9. 输入轮询任务
     // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ static void runLauncher(const Config& cfg)
             auto* a = static_cast<InputTaskArg*>(arg);
             while (true)
             {
-                a->input->poll();
+                a->input->Poll();
                 vTaskDelay(pdMS_TO_TICKS(10));
             }
         },
@@ -200,7 +200,7 @@ static void runLauncher(const Config& cfg)
 // ─────────────────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
 
-void start(const Config& cfg) { runLauncher(cfg); }
+void start(const Config& cfg) { RunLauncher(cfg); }
 
 struct StartTaskArg
 {
@@ -216,7 +216,7 @@ void startTask(const Config& cfg, uint32_t stack_depth, uint8_t priority)
             auto* ta = static_cast<StartTaskArg*>(a);
             Config local_cfg = ta->cfg;
             delete ta;
-            runLauncher(local_cfg);
+            RunLauncher(local_cfg);
             vTaskDelete(nullptr);
         },
         "launcher", stack_depth, arg, priority, nullptr);

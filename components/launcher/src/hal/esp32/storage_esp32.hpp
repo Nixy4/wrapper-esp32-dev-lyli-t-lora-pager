@@ -43,19 +43,19 @@ class StorageEsp32 : public IStorage
 
     // ── NVS ──────────────────────────────────────────────────────────────────
 
-    bool nvsGet(const char* ns, const char* key, std::string& out) override;
-    bool nvsSet(const char* ns, const char* key, const std::string& val) override;
-    bool nvsDel(const char* ns, const char* key) override;
-    bool nvsIterateKeys(const char* ns, std::vector<std::string>& keys) override;
+    bool NvsGet(const char* ns, const char* key, std::string& out) override;
+    bool NvsSet(const char* ns, const char* key, const std::string& val) override;
+    bool NvsDel(const char* ns, const char* key) override;
+    bool NvsIterateKeys(const char* ns, std::vector<std::string>& keys) override;
 
     // ── SD 卡 ────────────────────────────────────────────────────────────────
-    bool sdMount() override;
-    bool sdUnmount() override;
-    bool sdAvailable() override { return sd_mounted_; }
-    std::vector<std::string> sdListFiles(const char* dir, const char* ext) override;
-    bool sdFileSize(const char* path, size_t& out_size) override;
-    FILE* sdOpenRead(const char* path) override;
-    void sdClose(FILE* f) override;
+    bool SdMount() override;
+    bool SdUnmount() override;
+    bool SdAvailable() override { return sd_mounted_; }
+    std::vector<std::string> SdListFiles(const char* dir, const char* ext) override;
+    bool SdFileSize(const char* path, size_t& out_size) override;
+    FILE* SdOpenRead(const char* path) override;
+    void SdClose(FILE* f) override;
 };
 
 }  // namespace launcher::hal

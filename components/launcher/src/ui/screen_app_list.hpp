@@ -42,23 +42,23 @@ class ScreenAppList
     int selected_idx_ = 0;
 
     // ─── LVGL 事件回调 ────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    static void onListItemClicked(lv_event_t* e);
-    static void onSdInstallClicked(lv_event_t* e);
-    static void onSettingsClicked(lv_event_t* e);
+    static void OnListItemClicked(lv_event_t* e);
+    static void OnSdInstallClicked(lv_event_t* e);
+    static void OnSettingsClicked(lv_event_t* e);
 
-    void buildWidgets();
-    void refreshList();
-    void updateStatus();
-    void confirmBoot(int idx);
+    void BuildWidgets();
+    void RefreshList();
+    void UpdateStatus();
+    void ConfirmBoot(int idx);
 
    public:
     ScreenAppList(ScreenManager& mgr, core::AppRegistry& registry, core::BootManager& boot_mgr);
 
     /// @return 底层 LVGL 屏幕对象（传入 ScreenManager::push）。
-    lv_obj_t* screen() const { return screen_; }
+    lv_obj_t* Screen() const { return screen_; }
 
     /// Handle a keyboard navigation event.
-    void handleInput(const hal::InputEvent& ev);
+    void HandleInput(const hal::InputEvent& ev);
 };
 
 }  // namespace launcher::ui

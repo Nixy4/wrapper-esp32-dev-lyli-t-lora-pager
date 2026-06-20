@@ -30,12 +30,12 @@ StorageEsp32::StorageEsp32(wrapper::Logger& logger,
 StorageEsp32::~StorageEsp32()
 {
     if (sd_mounted_)
-        sdUnmount();
+        SdUnmount();
 }
 
 // ─── NVS helpers ─────────────────────────────────────────────────────────────
 
-bool StorageEsp32::nvsGet(const char* ns, const char* key, std::string& out)
+bool StorageEsp32::NvsGet(const char* ns, const char* key, std::string& out)
 {
     nvs_handle_t h;
     if (nvs_open(ns, NVS_READONLY, &h) != ESP_OK)
@@ -63,7 +63,7 @@ bool StorageEsp32::nvsGet(const char* ns, const char* key, std::string& out)
     return true;
 }
 
-bool StorageEsp32::nvsSet(const char* ns, const char* key, const std::string& val)
+bool StorageEsp32::NvsSet(const char* ns, const char* key, const std::string& val)
 {
     nvs_handle_t h;
     if (nvs_open(ns, NVS_READWRITE, &h) != ESP_OK)
@@ -77,7 +77,7 @@ bool StorageEsp32::nvsSet(const char* ns, const char* key, const std::string& va
     return err == ESP_OK;
 }
 
-bool StorageEsp32::nvsDel(const char* ns, const char* key)
+bool StorageEsp32::NvsDel(const char* ns, const char* key)
 {
     nvs_handle_t h;
     if (nvs_open(ns, NVS_READWRITE, &h) != ESP_OK)
@@ -92,7 +92,7 @@ bool StorageEsp32::nvsDel(const char* ns, const char* key)
     return err == ESP_OK || err == ESP_ERR_NVS_NOT_FOUND;
 }
 
-bool StorageEsp32::nvsIterateKeys(const char* ns, std::vector<std::string>& keys)
+bool StorageEsp32::NvsIterateKeys(const char* ns, std::vector<std::string>& keys)
 {
     keys.clear();
 
@@ -113,7 +113,7 @@ bool StorageEsp32::nvsIterateKeys(const char* ns, std::vector<std::string>& keys
 
 // ─── SD 卡 ───────────────────────────────────────────────────────────────────
 
-bool StorageEsp32::sdMount()
+bool StorageEsp32::SdMount()
 {
     if (sd_mounted_)
         return true;
@@ -132,7 +132,7 @@ bool StorageEsp32::sdMount()
     return true;
 }
 
-bool StorageEsp32::sdUnmount()
+bool StorageEsp32::SdUnmount()
 {
     if (!sd_mounted_)
         return true;
@@ -143,7 +143,7 @@ bool StorageEsp32::sdUnmount()
     return true;
 }
 
-std::vector<std::string> StorageEsp32::sdListFiles(const char* dir, const char* ext)
+std::vector<std::string> StorageEsp32::SdListFiles(const char* dir, const char* ext)
 {
     std::vector<std::string> result;
     if (!sd_mounted_)
@@ -182,7 +182,7 @@ std::vector<std::string> StorageEsp32::sdListFiles(const char* dir, const char* 
     return result;
 }
 
-bool StorageEsp32::sdFileSize(const char* path, size_t& out_size)
+bool StorageEsp32::SdFileSize(const char* path, size_t& out_size)
 {
     struct stat st;
     if (stat(path, &st) != 0)
@@ -191,9 +191,9 @@ bool StorageEsp32::sdFileSize(const char* path, size_t& out_size)
     return true;
 }
 
-FILE* StorageEsp32::sdOpenRead(const char* path) { return fopen(path, "rb"); }
+FILE* StorageEsp32::SdOpenRead(const char* path) { return fopen(path, "rb"); }
 
-void StorageEsp32::sdClose(FILE* f)
+void StorageEsp32::SdClose(FILE* f)
 {
     if (f)
         fclose(f);

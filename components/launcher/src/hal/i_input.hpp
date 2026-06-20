@@ -14,11 +14,11 @@ namespace launcher::hal
  */
 enum class NavKey
 {
-    NONE,    ///< 非导航按键 —— 通过 char 字段传递字符
-    NEXT,    ///< 向下/向前移动选择
-    PREV,    ///< 向上/向后移动选择
-    SELECT,  ///< 确认/进入
-    BACK,    ///< 取消/返回
+    None,    ///< 非导航按键 —— 通过 char 字段传递字符
+    Next,    ///< 向下/向前移动选择
+    Prev,    ///< 向上/向后移动选择
+    Select,  ///< 确认/进入
+    Back,    ///< 取消/返回
 };
 
 /**
@@ -26,7 +26,7 @@ enum class NavKey
  */
 struct InputEvent
 {
-    NavKey nav = NavKey::NONE;  ///< 导航操作（NONE 表示文本输入）
+    NavKey nav = NavKey::None;  ///< 导航操作（NONE 表示文本输入）
     char ch = '\0';             ///< nav == NONE 时的可打印字符
     bool long_press = false;    ///< true 表示按键被长按
 };
@@ -47,10 +47,10 @@ class IInput
     virtual ~IInput() = default;
 
     /// 注册事件回调（传入 nullptr 可取消注册）。
-    virtual void setCallback(InputCallback cb) = 0;
+    virtual void SetCallback(InputCallback cb) = 0;
 
     /// 读取待处理输入并将事件分发给已注册的回调。
-    virtual void poll() = 0;
+    virtual void Poll() = 0;
 };
 
 }  // namespace launcher::hal

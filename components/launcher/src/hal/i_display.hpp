@@ -27,25 +27,25 @@ class IDisplay
 
     /// 获取显示互斥锁。在创建/修改控件时必须持有此锁。
     /// @return 成功返回 true，超时返回 false。
-    virtual bool lock(uint32_t timeout_ms) = 0;
+    virtual bool Lock(uint32_t timeout_ms) = 0;
 
     /// 释放显示互斥锁。
-    virtual void unlock() = 0;
+    virtual void Unlock() = 0;
 
     /// @return 当前激活的 LVGL 屏幕（lv_scr_act()）。
-    virtual lv_obj_t* activeScreen() = 0;
+    virtual lv_obj_t* ActiveScreen() = 0;
 
     /// 将 @p screen 加载为激活显示屏幕。
-    virtual void loadScreen(lv_obj_t* screen) = 0;
+    virtual void LoadScreen(lv_obj_t* screen) = 0;
 
     /// 设置显示方向。
-    virtual void setRotation(lv_display_rotation_t rot) = 0;
+    virtual void SetRotation(lv_display_rotation_t rot) = 0;
 
     /// 显示宽度（像素）。
-    virtual int width() = 0;
+    virtual int Width() = 0;
 
     /// 显示高度（像素）。
-    virtual int height() = 0;
+    virtual int Height() = 0;
 };
 
 }  // namespace launcher::hal

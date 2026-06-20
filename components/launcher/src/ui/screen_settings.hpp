@@ -27,22 +27,22 @@ class ScreenSettings
     lv_obj_t* sw_autoboot_ = nullptr;
     lv_obj_t* slider_bl_ = nullptr;
 
-    static void onBackClicked(lv_event_t* e);
-    static void onAutoBootChanged(lv_event_t* e);
-    static void onBrightnessChanged(lv_event_t* e);
+    static void OnBackClicked(lv_event_t* e);
+    static void OnAutoBootChanged(lv_event_t* e);
+    static void OnBrightnessChanged(lv_event_t* e);
 
-    void buildWidgets();
-    void loadSettings();
-    void saveAutoboot(bool on);
-    void saveBrightness(int pct);
+    void BuildWidgets();
+    void LoadSettings();
+    void SaveAutoboot(bool on);
+    void SaveBrightness(int pct);
 
    public:
     ScreenSettings(ScreenManager& mgr, core::AppRegistry& registry);
-    lv_obj_t* screen() const { return screen_; }
-    void handleInput(const hal::InputEvent& ev);
+    lv_obj_t* Screen() const { return screen_; }
+    void HandleInput(const hal::InputEvent& ev);
 };
 
 /// 由 ScreenAppList 调用的辅助函数，将此屏幕压入栈。
-void pushSettings(ScreenManager& mgr, core::AppRegistry& registry);
+void PushSettings(ScreenManager& mgr, core::AppRegistry& registry);
 
 }  // namespace launcher::ui

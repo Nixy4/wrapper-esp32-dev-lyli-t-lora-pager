@@ -6,7 +6,7 @@
 static const char* TAG = "Launcher|Settings";
 
 // 设置界面中亮度的外部函数声明（由 launcher.cpp 的 extern 解析）
-extern void launcherSetBrightness(int pct);
+extern void LauncherSetBrightness(int pct);
 
 namespace launcher::ui
 {
@@ -16,9 +16,9 @@ namespace launcher::ui
 ScreenSettings::ScreenSettings(ScreenManager& mgr, core::AppRegistry& registry)
     : mgr_(mgr), registry_(registry)
 {
-    hal::IDisplay& disp = mgr_.display();
+    hal::IDisplay& disp = mgr_.Display();
 
-    if (!disp.lock(1000))
+    if (!disp.Lock(1000))
     {
         ESP_LOGE(TAG, "Lock timeout");
         return;
@@ -28,18 +28,18 @@ ScreenSettings::ScreenSettings(ScreenManager& mgr, core::AppRegistry& registry)
     lv_obj_set_style_bg_color(screen_, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_bg_opa(screen_, LV_OPA_COVER, 0);
 
-    buildWidgets();
-    disp.unlock();
+    BuildWidgets();
+    disp.Unlock();
 
-    mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
+    mgr_.Input().SetCallback([this](const hal::InputEvent& ev) { HandleInput(ev); });
 }
 
 // ─── 控件 ────────────────────────────────────────────────────────────────────
 
-void ScreenSettings::buildWidgets()
+void ScreenSettings::BuildWidgets()
 {
-    hal::IDisplay& disp = mgr_.display();
-    const int W = disp.width();
+    hal::IDisplay& disp = mgr_.Display();
+    const int W = disp.Width();
 
     // ── 标题栏
     lv_obj_t* bar = lv_obj_create(screen_);
@@ -58,7 +58,7 @@ void ScreenSettings::buildWidgets()
     lv_label_set_text(bl, LV_SYMBOL_LEFT " Back");
     lv_obj_set_style_text_font(bl, &lv_font_montserrat_14, 0);
     lv_obj_center(bl);
-    lv_obj_add_event_cb(back_btn, onBackClicked, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(back_btn, OnBackClicked, LV_EVENT_CLICKED, this);
 
     lv_obj_t* title = lv_label_create(bar);
     lv_label_set_text(title, "Settings");
@@ -68,7 +68,7 @@ void ScreenSettings::buildWidgets()
 
     // Content container
     lv_obj_t* cont = lv_obj_create(screen_);
-    lv_obj_set_size(cont, W - 20, disp.height() - 50);
+    lv_obj_set_size(cont, W - 20, disp.Height() - 50);
     lv_obj_align(cont, LV_ALIGN_TOP_MID, 0, 36);
     lv_obj_set_style_bg_color(cont, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_border_width(cont, 0, 0);
@@ -90,7 +90,7 @@ void ScreenSettings::buildWidgets()
     lv_obj_set_style_text_font(lbl1, &lv_font_montserrat_14, 0);
 
     sw_autoboot_ = lv_switch_create(row1);
-    lv_obj_add_event_cb(sw_autoboot_, onAutoBootChanged, LV_EVENT_VALUE_CHANGED, this);
+    lv_obj_add_event_cb(sw_autoboot_, OnAutoBootChanged, LV_EVENT_VALUE_CHANGED, this);
 
     // ── 背光滑动条
     // ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -109,12 +109,12 @@ void ScreenSettings::buildWidgets()
     slider_bl_ = lv_slider_create(row2);
     lv_obj_set_width(slider_bl_, 200);
     lv_slider_set_range(slider_bl_, 10, 100);
-    lv_obj_add_event_cb(slider_bl_, onBrightnessChanged, LV_EVENT_VALUE_CHANGED, this);
+    lv_obj_add_event_cb(slider_bl_, OnBrightnessChanged, LV_EVENT_VALUE_CHANGED, this);
 
-    loadSettings();
+    LoadSettings();
 }
 
-void ScreenSettings::loadSettings()
+void ScreenSettings::LoadSettings()
 {
     extern hal::IStorage* g_storage;
 
@@ -123,7 +123,7 @@ void ScreenSettings::loadSettings()
     if (g_storage)
     {
         std::string val;
-        if (g_storage->nvsGet(CONFIG_LAUNCHER_NVS_CFG_NS, "auto_boot", val))
+        if (g_storage->NvsGet(CONFIG_LAUNCHER_NVS_CFG_NS, "auto_boot", val))
             auto_boot = (val != "0");
     }
     lv_obj_set_state(sw_autoboot_, LV_STATE_CHECKED, auto_boot);
@@ -133,72 +133,72 @@ void ScreenSettings::loadSettings()
     if (g_storage)
     {
         std::string bval;
-        if (g_storage->nvsGet(CONFIG_LAUNCHER_NVS_CFG_NS, "brightness", bval))
+        if (g_storage->NvsGet(CONFIG_LAUNCHER_NVS_CFG_NS, "brightness", bval))
             brightness = std::stoi(bval);
     }
     lv_slider_set_value(slider_bl_, brightness, LV_ANIM_OFF);
 }
 
-void ScreenSettings::saveAutoboot(bool on)
+void ScreenSettings::SaveAutoboot(bool on)
 {
     extern hal::IStorage* g_storage;
     if (g_storage)
-        g_storage->nvsSet(CONFIG_LAUNCHER_NVS_CFG_NS, "auto_boot", on ? "1" : "0");
+        g_storage->NvsSet(CONFIG_LAUNCHER_NVS_CFG_NS, "auto_boot", on ? "1" : "0");
     ESP_LOGI(TAG, "auto_boot = %s", on ? "on" : "off");
 }
 
-void ScreenSettings::saveBrightness(int pct)
+void ScreenSettings::SaveBrightness(int pct)
 {
     extern hal::IStorage* g_storage;
     if (g_storage)
-        g_storage->nvsSet(CONFIG_LAUNCHER_NVS_CFG_NS, "brightness", std::to_string(pct));
-    launcherSetBrightness(pct);
+        g_storage->NvsSet(CONFIG_LAUNCHER_NVS_CFG_NS, "brightness", std::to_string(pct));
+    LauncherSetBrightness(pct);
     ESP_LOGI(TAG, "brightness = %d%%", pct);
 }
 
 // ─── 输入处理 ────────────────────────────────────────────────────────────────
 
-void ScreenSettings::handleInput(const hal::InputEvent& ev)
+void ScreenSettings::HandleInput(const hal::InputEvent& ev)
 {
-    if (ev.nav == hal::NavKey::BACK)
-        mgr_.pop();
+    if (ev.nav == hal::NavKey::Back)
+        mgr_.Pop();
 }
 
 // ─── LVGL 回调 ───────────────────────────────────────────────────────────────
 
-void ScreenSettings::onBackClicked(lv_event_t* e)
+void ScreenSettings::OnBackClicked(lv_event_t* e)
 {
     if (lv_event_get_code(e) != LV_EVENT_CLICKED)
         return;
     auto* self = static_cast<ScreenSettings*>(lv_event_get_user_data(e));
     if (self)
-        self->mgr_.pop();
+        self->mgr_.Pop();
 }
 
-void ScreenSettings::onAutoBootChanged(lv_event_t* e)
+void ScreenSettings::OnAutoBootChanged(lv_event_t* e)
 {
     auto* self = static_cast<ScreenSettings*>(lv_event_get_user_data(e));
     if (!self)
         return;
     bool on = lv_obj_has_state(self->sw_autoboot_, LV_STATE_CHECKED);
-    self->saveAutoboot(on);
+    self->SaveAutoboot(on);
 }
 
-void ScreenSettings::onBrightnessChanged(lv_event_t* e)
+void ScreenSettings::OnBrightnessChanged(lv_event_t* e)
 {
     auto* self = static_cast<ScreenSettings*>(lv_event_get_user_data(e));
     if (!self)
         return;
     int pct = static_cast<int>(lv_slider_get_value(self->slider_bl_));
-    self->saveBrightness(pct);
+    self->SaveBrightness(pct);
 }
 
 // ─── 辅助函数 ────────────────────────────────────────────────────────────────
 
-void pushSettings(ScreenManager& mgr, core::AppRegistry& registry)
+void PushSettings(ScreenManager& mgr, core::AppRegistry& registry)
 {
     auto* scr = new ScreenSettings(mgr, registry);
-    mgr.push(scr->screen(), [scr]() { delete scr; });
+    mgr.Push(scr->Screen(), [scr]() { delete scr; });
 }
 
 }  // namespace launcher::ui

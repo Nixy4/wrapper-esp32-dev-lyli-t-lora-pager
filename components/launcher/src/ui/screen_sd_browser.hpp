@@ -40,24 +40,24 @@ class ScreenSdBrowser
     std::vector<std::string> files_;
     int selected_idx_ = 0;
 
-    static void onItemClicked(lv_event_t* e);
-    static void onBackClicked(lv_event_t* e);
+    static void OnItemClicked(lv_event_t* e);
+    static void OnBackClicked(lv_event_t* e);
 
-    void buildWidgets();
-    void refreshList();
-    void startInstall(int idx);
+    void BuildWidgets();
+    void RefreshList();
+    void StartInstall(int idx);
 
    public:
     ScreenSdBrowser(ScreenManager& mgr, core::AppRegistry& registry, core::SdInstaller& installer);
 
-    lv_obj_t* screen() const { return screen_; }
-    void handleInput(const hal::InputEvent& ev);
+    lv_obj_t* Screen() const { return screen_; }
+    void HandleInput(const hal::InputEvent& ev);
 
     /// 填充文件列表（构造完成后、push 之前调用）。
-    void setFiles(std::vector<std::string> files) { files_ = std::move(files); }
+    void SetFiles(std::vector<std::string> files) { files_ = std::move(files); }
 };
 
 /// 由 ScreenAppList 调用的辅助函数，避免循环包含。
-void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry);
+void PushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry);
 
 }  // namespace launcher::ui

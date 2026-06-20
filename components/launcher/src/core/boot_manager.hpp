@@ -16,10 +16,10 @@ namespace launcher::core
  * 启动时，BootManager 决定是显示 Launcher 菜单还是直接
  * 引导上次使用的应用：
  *
- *   shouldShowMenu() == false  →  调用 bootApp(last_label)
- *   shouldShowMenu() == true   →  显示 ScreenAppList
+ *   ShouldShowMenu() == false  →  调用 BootApp(last_label)
+ *   ShouldShowMenu() == true   →  显示 ScreenAppList
  *
- * bootApp() 通过 IPartition::setBootByLabel() 更新 OTA 引导分区，
+ * BootApp() 通过 IPartition::SetBootByLabel() 更新 OTA 引导分区，
  * 将选择记录到 NVS，然后调用 esp_restart()。
  */
 class BootManager
@@ -47,9 +47,9 @@ class BootManager
      * 找到有效的上次启动应用时返回 false（自动引导）。
      *
      * @param[out] last_label  返回 false 时填充上次启动的标签
-     *                         （可直接传入 bootApp()）。
+     *                         （可直接传入 BootApp()）。
      */
-    bool shouldShowMenu(std::string& last_label);
+    bool ShouldShowMenu(std::string& last_label);
 
     /**
      * @brief 引导由 @p label 标识的应用。
@@ -57,12 +57,12 @@ class BootManager
      * 设置 OTA 引导分区，将标签写入 NVS，然后
      * 调用 esp_restart()。成功时不返回。
      */
-    void bootApp(const std::string& label);
+    void BootApp(const std::string& label);
 
     /**
      * @brief 获取当前运行分区的标签。
      */
-    bool getCurrentLabel(std::string& label);
+    bool GetCurrentLabel(std::string& label);
 };
 
 }  // namespace launcher::core

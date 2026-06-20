@@ -15,13 +15,17 @@ BootManager::BootManager(hal::IPartition& partition,
                          osal::ITime& time,
                          AppRegistry& registry,
                          const char* cfg_ns)
-    : partition_(partition), storage_(storage), time_(time), registry_(registry), cfg_ns_(cfg_ns)
+    : partition_(partition),
+      storage_(storage),
+      time_(time),
+      registry_(registry),
+      cfg_ns_(cfg_ns)
 {
 }
 
-bool BootManager::shouldShowMenu(std::string& last_label)
+bool BootManager::ShouldShowMenu(std::string& last_label)
 {
-    if (!registry_.getLastBooted(last_label) || last_label.empty())
+    if (!registry_.GetLastBooted(last_label) || last_label.empty())
     {
         ESP_LOGI(TAG, "No last-booted app in NVS → show menu");
         return true;
@@ -43,29 +47,29 @@ bool BootManager::shouldShowMenu(std::string& last_label)
     return false;
 }
 
-void BootManager::bootApp(const std::string& label)
+void BootManager::BootApp(const std::string& label)
 {
     ESP_LOGI(TAG, "Booting app: '%s'", label.c_str());
 
-    if (!partition_.setBootByLabel(label.c_str()))
+    if (!partition_.SetBootByLabel(label.c_str()))
     {
         ESP_LOGE(TAG, "Failed to set boot partition to '%s'", label.c_str());
         return;
     }
 
-    registry_.setLastBooted(label);
+    registry_.SetLastBooted(label);
 
     ESP_LOGI(TAG, "Restarting…");
     // 小延迟以将 UART 输出刷新
-    time_.delayMs(100);
+    time_.DelayMs(100);
     esp_restart();
     // Not reached
 }
 
-bool BootManager::getCurrentLabel(std::string& label)
+bool BootManager::GetCurrentLabel(std::string& label)
 {
     char buf[17] = {};
-    if (!partition_.getBootLabel(buf, sizeof(buf)))
+    if (!partition_.GetBootLabel(buf, sizeof(buf)))
         return false;
     label = buf;
     return true;

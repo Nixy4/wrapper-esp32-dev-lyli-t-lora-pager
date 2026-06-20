@@ -42,8 +42,8 @@ class ScreenManager
 
     std::vector<Frame> stack_;
 
-    void loadTop();
-    void destroyFrame(Frame& frame);
+    void LoadTop();
+    void DestroyFrame(Frame& frame);
 
    public:
     ScreenManager(hal::IDisplay& display, hal::IInput& input);
@@ -51,20 +51,20 @@ class ScreenManager
 
     /// 将预先创建的 LVGL 屏幕压入栈并使其激活。
     /// @param on_destroy  屏幕对象删除前调用的回调（如需释放用户数据）。
-    void push(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
+    void Push(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
 
     /// 删除栈顶屏幕并返回上一个屏幕。
     /// 只剩一个屏幕时不操作。
-    void pop();
+    void Pop();
 
     /// 替换栈顶屏幕（pop + push 不产生中间重绘）。
-    void replace(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
+    void Replace(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
 
     /// 栈中屏幕数量。
-    size_t depth() const { return stack_.size(); }
+    size_t Depth() const { return stack_.size(); }
 
-    hal::IDisplay& display() { return display_; }
-    hal::IInput& input() { return input_; }
+    hal::IDisplay& Display() { return display_; }
+    hal::IInput& Input() { return input_; }
 };
 
 }  // namespace launcher::ui

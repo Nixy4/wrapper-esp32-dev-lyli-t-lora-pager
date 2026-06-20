@@ -16,10 +16,10 @@ class ITime
     virtual ~ITime() = default;
 
     /// 阻塞调用任务至少 @p ms 毫秒。
-    virtual void delayMs(uint32_t ms) = 0;
+    virtual void DelayMs(uint32_t ms) = 0;
 
     /// 返回自启动以来的毫秒数（超过 UINT32_MAX 后回绕）。
-    virtual uint32_t tickMs() = 0;
+    virtual uint32_t TickMs() = 0;
 };
 
 }  // namespace launcher::osal

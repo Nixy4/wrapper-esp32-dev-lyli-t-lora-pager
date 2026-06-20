@@ -28,27 +28,27 @@ class IStorage
     // ── NVS ──────────────────────────────────────────────────────────────────
 
     /// Read a string value.  @return false if the key does not exist.
-    virtual bool nvsGet(const char* ns, const char* key, std::string& out) = 0;
+    virtual bool NvsGet(const char* ns, const char* key, std::string& out) = 0;
 
     /// Write or overwrite a string value.
-    virtual bool nvsSet(const char* ns, const char* key, const std::string& val) = 0;
+    virtual bool NvsSet(const char* ns, const char* key, const std::string& val) = 0;
 
     /// 删除键。即使键不存在也返回 true。
-    virtual bool nvsDel(const char* ns, const char* key) = 0;
+    virtual bool NvsDel(const char* ns, const char* key) = 0;
 
     /// 列出命名空间中的所有键。
-    virtual bool nvsIterateKeys(const char* ns, std::vector<std::string>& keys) = 0;
+    virtual bool NvsIterateKeys(const char* ns, std::vector<std::string>& keys) = 0;
 
     // ── SD 卡 ────────────────────────────────────────────────────────────────
 
     /// 挂载 SD 卡。可重复调用。
-    virtual bool sdMount() = 0;
+    virtual bool SdMount() = 0;
 
     /// 卸载 SD 卡。
-    virtual bool sdUnmount() = 0;
+    virtual bool SdUnmount() = 0;
 
     /// @return SD 卡当前是否已挂载。
-    virtual bool sdAvailable() = 0;
+    virtual bool SdAvailable() = 0;
 
     /**
      * @brief 列出 @p dir 目录中所有符合 @p ext 过滤器的文件。
@@ -58,17 +58,17 @@ class IStorage
      *             传入 nullptr 或 "" 列出所有文件。
      * @return 完整文件路径列表（如 "/sdcard/myapp.bin"）。
      */
-    virtual std::vector<std::string> sdListFiles(const char* dir, const char* ext) = 0;
+    virtual std::vector<std::string> SdListFiles(const char* dir, const char* ext) = 0;
 
     /// 获取文件大小（字节）。@return 文件不存在时返回 false。
-    virtual bool sdFileSize(const char* path, size_t& out_size) = 0;
+    virtual bool SdFileSize(const char* path, size_t& out_size) = 0;
 
     /// 以只读模式打开 SD 卡上的文件。
     /// 调用方完成后必须调用 sdClose()。
-    virtual FILE* sdOpenRead(const char* path) = 0;
+    virtual FILE* SdOpenRead(const char* path) = 0;
 
     /// 关闭由 sdOpenRead() 打开的文件。
-    virtual void sdClose(FILE* f) = 0;
+    virtual void SdClose(FILE* f) = 0;
 };
 
 }  // namespace launcher::hal

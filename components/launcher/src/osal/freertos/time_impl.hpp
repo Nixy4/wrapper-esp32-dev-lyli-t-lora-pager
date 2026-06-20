@@ -16,9 +16,9 @@ namespace launcher::osal
 class FreeRtosTime : public ITime
 {
    public:
-    void delayMs(uint32_t ms) override { wrapper::Delay(ms); }
+    void DelayMs(uint32_t ms) override { wrapper::Delay(ms); }
 
-    uint32_t tickMs() override { return static_cast<uint32_t>(pdTICKS_TO_MS(xTaskGetTickCount())); }
+    uint32_t TickMs() override { return static_cast<uint32_t>(pdTICKS_TO_MS(xTaskGetTickCount())); }
 };
 
 }  // namespace launcher::osal

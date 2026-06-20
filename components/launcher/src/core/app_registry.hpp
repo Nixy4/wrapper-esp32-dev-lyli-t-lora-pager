@@ -38,20 +38,20 @@ class AppRegistry
                 const char* cfg_ns = CONFIG_LAUNCHER_NVS_CFG_NS);
 
     /// 从 NVS 加载所有已注册的应用到 @p apps。
-    bool load(std::vector<AppInfo>& apps);
+    bool Load(std::vector<AppInfo>& apps);
 
     /// 持久化一个应用条目（插入或更新）。
-    bool save(const AppInfo& app);
+    bool Save(const AppInfo& app);
 
     /// 按分区标签删除一个应用条目。
-    bool remove(const std::string& label);
+    bool Remove(const std::string& label);
 
     /// 记录最近一次引导的分区标签。
-    bool setLastBooted(const std::string& label);
+    bool SetLastBooted(const std::string& label);
 
     /// 获取最近一次引导的分区标签。
     /// 类目不存在时返回 false，@p label 不变。
-    bool getLastBooted(std::string& label);
+    bool GetLastBooted(std::string& label);
 };
 
 }  // namespace launcher::core

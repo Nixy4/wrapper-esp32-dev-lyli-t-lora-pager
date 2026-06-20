@@ -23,13 +23,13 @@ class DisplayEsp32 : public IDisplay
    public:
     DisplayEsp32(wrapper::Logger& logger, wrapper::LvglPort& lvgl, int width, int height);
 
-    bool lock(uint32_t timeout_ms) override;
-    void unlock() override;
-    lv_obj_t* activeScreen() override;
-    void loadScreen(lv_obj_t* screen) override;
-    void setRotation(lv_display_rotation_t rot) override;
-    int width() override { return width_; }
-    int height() override { return height_; }
+    bool Lock(uint32_t timeout_ms) override;
+    void Unlock() override;
+    lv_obj_t* ActiveScreen() override;
+    void LoadScreen(lv_obj_t* screen) override;
+    void SetRotation(lv_display_rotation_t rot) override;
+    int Width() override { return width_; }
+    int Height() override { return height_; }
 };
 
 }  // namespace launcher::hal

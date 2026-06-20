@@ -47,11 +47,11 @@ class ScreenInstallProgress
     };
     ProgressData prog_data_{};
 
-    static void installTask(void* arg);
-    static void onTimerTick(lv_timer_t* timer);
+    static void InstallTask(void* arg);
+    static void OnTimerTick(lv_timer_t* timer);
 
-    void buildWidgets();
-    void updateProgress(const char* stage, size_t written, size_t total);
+    void BuildWidgets();
+    void UpdateProgress(const char* stage, size_t written, size_t total);
 
    public:
     ScreenInstallProgress(ScreenManager& mgr,
@@ -60,11 +60,11 @@ class ScreenInstallProgress
                           const std::string& sd_path,
                           const std::string& display_name);
 
-    lv_obj_t* screen() const { return screen_; }
+    lv_obj_t* Screen() const { return screen_; }
 };
 
 /// Helper called by ScreenSdBrowser to push this screen.
-void pushInstallProgress(ScreenManager& mgr,
+void PushInstallProgress(ScreenManager& mgr,
                          core::AppRegistry& registry,
                          core::SdInstaller& installer,
                          const std::string& sd_path,

@@ -25,9 +25,9 @@ ScreenSdBrowser::ScreenSdBrowser(ScreenManager& mgr,
                                  core::SdInstaller& installer)
     : mgr_(mgr), registry_(registry), installer_(installer)
 {
-    hal::IDisplay& disp = mgr_.display();
+    hal::IDisplay& disp = mgr_.Display();
 
-    if (!disp.lock(1000))
+    if (!disp.Lock(1000))
     {
         ESP_LOGE(TAG, "Lock timeout");
         return;
@@ -37,18 +37,18 @@ ScreenSdBrowser::ScreenSdBrowser(ScreenManager& mgr,
     lv_obj_set_style_bg_color(screen_, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_bg_opa(screen_, LV_OPA_COVER, 0);
 
-    buildWidgets();
-    disp.unlock();
+    BuildWidgets();
+    disp.Unlock();
 
-    mgr_.input().setCallback([this](const hal::InputEvent& ev) { handleInput(ev); });
+    mgr_.Input().SetCallback([this](const hal::InputEvent& ev) { HandleInput(ev); });
 }
 
 // ─── 控件 ────────────────────────────────────────────────────────────────────
 
-void ScreenSdBrowser::buildWidgets()
+void ScreenSdBrowser::BuildWidgets()
 {
-    hal::IDisplay& disp = mgr_.display();
-    const int W = disp.width();
+    hal::IDisplay& disp = mgr_.Display();
+    const int W = disp.Width();
 
     // ── 标题栏
     lv_obj_t* bar = lv_obj_create(screen_);
@@ -67,7 +67,7 @@ void ScreenSdBrowser::buildWidgets()
     lv_label_set_text(back_lbl, LV_SYMBOL_LEFT " Back");
     lv_obj_set_style_text_font(back_lbl, &lv_font_montserrat_14, 0);
     lv_obj_center(back_lbl);
-    lv_obj_add_event_cb(back_btn, onBackClicked, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(back_btn, OnBackClicked, LV_EVENT_CLICKED, this);
 
     lv_obj_t* title = lv_label_create(bar);
     lv_label_set_text(title, "SD Card — select .bin to install");
@@ -76,7 +76,7 @@ void ScreenSdBrowser::buildWidgets()
     lv_obj_align(title, LV_ALIGN_CENTER, 20, 0);
 
     list_ = lv_list_create(screen_);
-    lv_obj_set_size(list_, W, disp.height() - 50);
+    lv_obj_set_size(list_, W, disp.Height() - 50);
     lv_obj_align(list_, LV_ALIGN_TOP_MID, 0, 32);
     lv_obj_set_style_bg_color(list_, lv_color_hex(0x1A1A2E), 0);
     lv_obj_set_style_border_width(list_, 0, 0);
@@ -87,10 +87,10 @@ void ScreenSdBrowser::buildWidgets()
     lv_obj_set_style_text_color(status_lbl_, lv_color_hex(0x888888), 0);
     lv_obj_align(status_lbl_, LV_ALIGN_BOTTOM_LEFT, 4, -2);
 
-    refreshList();
+    RefreshList();
 }
 
-void ScreenSdBrowser::refreshList()
+void ScreenSdBrowser::RefreshList()
 {
     if (!list_)
         return;
@@ -115,7 +115,7 @@ void ScreenSdBrowser::refreshList()
         lv_obj_set_style_text_font(lv_obj_get_child(btn, 1), &lv_font_montserrat_14, 0);
 
         auto* ctx = new SdBrowserCtx{this, i};
-        lv_obj_add_event_cb(btn, onItemClicked, LV_EVENT_CLICKED, ctx);
+        lv_obj_add_event_cb(btn, OnItemClicked, LV_EVENT_CLICKED, ctx);
         lv_obj_add_event_cb(
             btn,
             [](lv_event_t* e) { delete static_cast<SdBrowserCtx*>(lv_event_get_user_data(e)); },
@@ -130,49 +130,49 @@ void ScreenSdBrowser::refreshList()
 
 // ─── 输入处理 ────────────────────────────────────────────────────────────────
 
-void ScreenSdBrowser::handleInput(const hal::InputEvent& ev)
+void ScreenSdBrowser::HandleInput(const hal::InputEvent& ev)
 {
-    hal::IDisplay& disp = mgr_.display();
+    hal::IDisplay& disp = mgr_.Display();
 
-    if (ev.nav == hal::NavKey::BACK)
+    if (ev.nav == hal::NavKey::Back)
     {
-        mgr_.pop();
+        mgr_.Pop();
         return;
     }
 
     if (files_.empty())
         return;
 
-    if (ev.nav == hal::NavKey::NEXT)
+    if (ev.nav == hal::NavKey::Next)
     {
         selected_idx_ = (selected_idx_ + 1) % static_cast<int>(files_.size());
-        if (disp.lock(100))
+        if (disp.Lock(100))
         {
             lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
             if (btn)
                 lv_obj_scroll_to_view(btn, LV_ANIM_ON);
-            disp.unlock();
+            disp.Unlock();
         }
     }
-    else if (ev.nav == hal::NavKey::PREV)
+    else if (ev.nav == hal::NavKey::Prev)
     {
         selected_idx_ =
             (selected_idx_ - 1 + static_cast<int>(files_.size())) % static_cast<int>(files_.size());
-        if (disp.lock(100))
+        if (disp.Lock(100))
         {
             lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
             if (btn)
                 lv_obj_scroll_to_view(btn, LV_ANIM_ON);
-            disp.unlock();
+            disp.Unlock();
         }
     }
-    else if (ev.nav == hal::NavKey::SELECT)
+    else if (ev.nav == hal::NavKey::Select)
     {
-        startInstall(selected_idx_);
+        StartInstall(selected_idx_);
     }
 }
 
-void ScreenSdBrowser::startInstall(int idx)
+void ScreenSdBrowser::StartInstall(int idx)
 {
     if (idx < 0 || idx >= static_cast<int>(files_.size()))
         return;
@@ -191,27 +191,27 @@ void ScreenSdBrowser::startInstall(int idx)
     }
 
     // 展示进度屏幕
-    extern void pushInstallProgress(ScreenManager&, core::AppRegistry&, core::SdInstaller&,
+    extern void PushInstallProgress(ScreenManager&, core::AppRegistry&, core::SdInstaller&,
                                     const std::string&, const std::string&);
-    pushInstallProgress(mgr_, registry_, installer_, path, name);
+    PushInstallProgress(mgr_, registry_, installer_, path, name);
 }
 
 // ─── LVGL 回调 ───────────────────────────────────────────────────────────────
 
-void ScreenSdBrowser::onItemClicked(lv_event_t* e)
+void ScreenSdBrowser::OnItemClicked(lv_event_t* e)
 {
     auto* ctx = static_cast<SdBrowserCtx*>(lv_event_get_user_data(e));
     if (ctx && lv_event_get_code(e) == LV_EVENT_CLICKED)
-        ctx->self->startInstall(ctx->idx);
+        ctx->self->StartInstall(ctx->idx);
 }
 
-void ScreenSdBrowser::onBackClicked(lv_event_t* e)
+void ScreenSdBrowser::OnBackClicked(lv_event_t* e)
 {
     if (lv_event_get_code(e) != LV_EVENT_CLICKED)
         return;
     auto* self = static_cast<ScreenSdBrowser*>(lv_event_get_user_data(e));
     if (self)
-        self->mgr_.pop();
+        self->mgr_.Pop();
 }
 
 // ─── 前向声明辅助函数 ────────────────────────────────────────────────────────
@@ -220,7 +220,7 @@ void ScreenSdBrowser::onBackClicked(lv_event_t* e)
 // launcher.cpp 存储 g_sd_installer 使本函数可以访问它。
 extern core::SdInstaller* g_sd_installer;
 
-void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry)
+void PushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry)
 {
     if (!g_sd_installer)
     {
@@ -232,8 +232,8 @@ void pushSdBrowser(ScreenManager& mgr, core::AppRegistry& registry)
     // 现在填充文件列表（存储已由 launcher.cpp 挂载）
     extern hal::IStorage* g_storage;
     if (g_storage)
-        scr->setFiles(g_storage->sdListFiles(CONFIG_LAUNCHER_SD_MOUNT_POINT, ".bin"));
-    mgr.push(scr->screen(), [scr]() { delete scr; });
+        scr->SetFiles(g_storage->SdListFiles(CONFIG_LAUNCHER_SD_MOUNT_POINT, ".bin"));
+    mgr.Push(scr->Screen(), [scr]() { delete scr; });
 }
 
 }  // namespace launcher::ui

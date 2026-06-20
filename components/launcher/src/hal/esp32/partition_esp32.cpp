@@ -12,7 +12,7 @@ PartitionEsp32::PartitionEsp32(wrapper::Logger& logger) : logger_(logger), part_
 
 // ─── planInstall ─────────────────────────────────────────────────────────────
 
-bool PartitionEsp32::planInstall(const char* label, size_t image_size, InstallSlot& slot)
+bool PartitionEsp32::PlanInstall(const char* label, size_t image_size, InstallSlot& slot)
 {
     // ── 情况 1：调用方指定了具体标签（重安装）────────────────────────────────────────
     if (label && label[0] != '\0')
@@ -70,12 +70,12 @@ bool PartitionEsp32::planInstall(const char* label, size_t image_size, InstallSl
 
 // ─── flashBegin ──────────────────────────────────────────────────────────────
 
-bool PartitionEsp32::flashBegin(const InstallSlot& slot, size_t image_size)
+bool PartitionEsp32::FlashBegin(const InstallSlot& slot, size_t image_size)
 {
     if (session_active_)
     {
         ESP_LOGW(TAG, "OTA 会话已处于活跃状态，中止前一次会话");
-        flashAbort();
+        FlashAbort();
     }
 
     const esp_partition_t* p = esp_partition_find_first(
@@ -104,11 +104,11 @@ bool PartitionEsp32::flashBegin(const InstallSlot& slot, size_t image_size)
 
 // ─── flashWrite ──────────────────────────────────────────────────────────────
 
-bool PartitionEsp32::flashWrite(const uint8_t* data, size_t len)
+bool PartitionEsp32::FlashWrite(const uint8_t* data, size_t len)
 {
     if (!session_active_)
     {
-        ESP_LOGE(TAG, "flashWrite: no active OTA session");
+        ESP_LOGE(TAG, "FlashWrite: no active OTA session");
         return false;
     }
 
@@ -123,11 +123,11 @@ bool PartitionEsp32::flashWrite(const uint8_t* data, size_t len)
 
 // ─── flashEnd ────────────────────────────────────────────────────────────────
 
-bool PartitionEsp32::flashEnd()
+bool PartitionEsp32::FlashEnd()
 {
     if (!session_active_)
     {
-        ESP_LOGE(TAG, "flashEnd: no active OTA session");
+        ESP_LOGE(TAG, "FlashEnd: no active OTA session");
         return false;
     }
 
@@ -149,7 +149,7 @@ bool PartitionEsp32::flashEnd()
 
 // ─── flashAbort ──────────────────────────────────────────────────────────────
 
-bool PartitionEsp32::flashAbort()
+bool PartitionEsp32::FlashAbort()
 {
     if (!session_active_)
         return true;
@@ -164,14 +164,14 @@ bool PartitionEsp32::flashAbort()
 
 // ─── setBootByLabel ──────────────────────────────────────────────────────────
 
-bool PartitionEsp32::setBootByLabel(const char* label)
+bool PartitionEsp32::SetBootByLabel(const char* label)
 {
     const esp_partition_t* p =
         esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
 
     if (!p)
     {
-        ESP_LOGE(TAG, "setBootByLabel: partition '%s' not found", label);
+        ESP_LOGE(TAG, "SetBootByLabel: partition '%s' not found", label);
         return false;
     }
 
@@ -188,7 +188,7 @@ bool PartitionEsp32::setBootByLabel(const char* label)
 
 // ─── getBootLabel ────────────────────────────────────────────────────────────
 
-bool PartitionEsp32::getBootLabel(char* label_out, size_t max_len)
+bool PartitionEsp32::GetBootLabel(char* label_out, size_t max_len)
 {
     const esp_partition_t* p = esp_ota_get_boot_partition();
     if (!p)

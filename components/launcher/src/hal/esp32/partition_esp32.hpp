@@ -33,15 +33,15 @@ class PartitionEsp32 : public IPartition
    public:
     explicit PartitionEsp32(wrapper::Logger& logger);
 
-    bool planInstall(const char* label, size_t image_size, InstallSlot& slot) override;
+    bool PlanInstall(const char* label, size_t image_size, InstallSlot& slot) override;
 
-    bool flashBegin(const InstallSlot& slot, size_t image_size) override;
-    bool flashWrite(const uint8_t* data, size_t len) override;
-    bool flashEnd() override;
-    bool flashAbort() override;
+    bool FlashBegin(const InstallSlot& slot, size_t image_size) override;
+    bool FlashWrite(const uint8_t* data, size_t len) override;
+    bool FlashEnd() override;
+    bool FlashAbort() override;
 
-    bool setBootByLabel(const char* label) override;
-    bool getBootLabel(char* label_out, size_t max_len) override;
+    bool SetBootByLabel(const char* label) override;
+    bool GetBootLabel(char* label_out, size_t max_len) override;
 };
 
 }  // namespace launcher::hal

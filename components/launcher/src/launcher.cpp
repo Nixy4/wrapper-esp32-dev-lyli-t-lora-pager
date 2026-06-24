@@ -42,12 +42,6 @@ static const char* TAG = "Launcher";
 // screen_settings.cpp) via extern declarations.  They are valid for the
 // 生命周期与 launcher 任务相同。
 
-namespace launcher::ui
-{
-hal::IStorage* g_storage = nullptr;
-core::SdInstaller* g_sd_installer = nullptr;
-}  // namespace launcher::ui
-
 // ── 亮度设置辅助函数（由 screen_settings.cpp
 // 前向声明）─────────────────────────────────────────────────────
 
@@ -69,6 +63,17 @@ namespace launcher
 
 static void RunLauncher(const Config& cfg)
 {
+    using Storage_t = hal::StorageEsp32;
+    using Display_t = hal::DisplayEsp32;
+    using Input_t = hal::InputEsp32;
+    using Partition_t = hal::PartitionEsp32;
+    using Time_t = osal::FreeRtosTime;
+    using Registry_t = core::AppRegistry<Storage_t>;
+    using Boot_t = core::BootManager<Partition_t, Storage_t, Time_t>;
+    using Installer_t = core::SdInstaller<Storage_t, Partition_t>;
+    using ScreenMgr_t = ui::ScreenManager<Display_t, Input_t>;
+    using AppList_t = ui::ScreenAppList<ScreenMgr_t, Registry_t, Boot_t, Installer_t>;
+
     // ── 1. 板级硬件初始化
     // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     ESP_LOGI(TAG, "初始化板级硬件...");
@@ -125,9 +130,6 @@ static void RunLauncher(const Config& cfg)
     hal::PartitionEsp32 partition_hal(logger_part);
 #endif
 
-    // 暴露全局变量给屏幕辅助函数
-    ui::g_storage = &storage_hal;
-
     // ── 4. 显示方向设置
     // ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     display_hal.SetRotation(LV_DISPLAY_ROTATION_180);
@@ -135,10 +137,9 @@ static void RunLauncher(const Config& cfg)
 
     // ── 5. 创建 Core 层
     // ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    core::AppRegistry app_registry(storage_hal);
-    core::BootManager boot_mgr(partition_hal, storage_hal, time_impl, app_registry);
-    core::SdInstaller sd_installer(storage_hal, partition_hal, app_registry);
-    ui::g_sd_installer = &sd_installer;
+    Registry_t app_registry(storage_hal);
+    Boot_t boot_mgr(partition_hal, storage_hal, time_impl, app_registry);
+    Installer_t sd_installer(storage_hal, partition_hal, app_registry);
 
     // ── 6. 挂载 SD 卡（尽力而为——可能未插入） ─────────────────
     if (!storage_hal.SdMount())
@@ -160,16 +161,16 @@ static void RunLauncher(const Config& cfg)
 
     // ── 8. UI 初始化
     // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    ui::ScreenManager screen_mgr(display_hal, input_hal);
+    ScreenMgr_t screen_mgr(display_hal, input_hal);
 
-    auto* app_list_screen = new ui::ScreenAppList(screen_mgr, app_registry, boot_mgr);
+    auto* app_list_screen = new AppList_t(screen_mgr, app_registry, boot_mgr, sd_installer);
     screen_mgr.Push(app_list_screen->Screen(), [app_list_screen]() { delete app_list_screen; });
 
     // ── 9. 输入轮询任务
     // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     struct InputTaskArg
     {
-        hal::IInput* input;
+        Input_t* input;
     };
     auto* input_arg = new InputTaskArg{&input_hal};
 

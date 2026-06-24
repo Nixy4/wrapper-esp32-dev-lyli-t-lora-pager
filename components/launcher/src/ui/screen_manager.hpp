@@ -3,8 +3,8 @@
 #include <functional>
 #include <vector>
 
-#include "hal/i_display.hpp"
-#include "hal/i_input.hpp"
+#include <esp_log.h>
+#include "lvgl.h"
 
 namespace launcher::ui
 {
@@ -25,14 +25,19 @@ namespace launcher::ui
  * 屏幕通过在 IInput 上注册的 InputCallback 接收输入事件；
  * 每次屏幕变为激活状态时都会更新该注册。
  */
+template <typename DisplayT, typename InputT>
 class ScreenManager
 {
    public:
+    using display_type = DisplayT;
+    using input_type = InputT;
     using DestroyCallback = std::function<void()>;
 
    private:
-    hal::IDisplay& display_;
-    hal::IInput& input_;
+    DisplayT& display_;
+    InputT& input_;
+
+    static constexpr const char* kTag = "Launcher|ScreenMgr";
 
     struct Frame
     {
@@ -42,29 +47,88 @@ class ScreenManager
 
     std::vector<Frame> stack_;
 
-    void LoadTop();
-    void DestroyFrame(Frame& frame);
+    void LoadTop()
+    {
+        if (stack_.empty())
+            return;
+
+        lv_obj_t* scr = stack_.back().screen;
+        if (!scr)
+            return;
+
+        if (display_.Lock(500))
+        {
+            display_.LoadScreen(scr);
+            display_.Unlock();
+        }
+        else
+        {
+            ESP_LOGE(kTag, "Display lock timeout while loading screen");
+        }
+    }
+
+    void DestroyFrame(Frame& frame)
+    {
+        if (frame.on_destroy)
+            frame.on_destroy();
+
+        if (frame.screen)
+        {
+            if (display_.Lock(200))
+            {
+                lv_obj_del(frame.screen);
+                display_.Unlock();
+            }
+            frame.screen = nullptr;
+        }
+    }
 
    public:
-    ScreenManager(hal::IDisplay& display, hal::IInput& input);
-    ~ScreenManager();
+    ScreenManager(DisplayT& display, InputT& input) : display_(display), input_(input) {}
 
-    /// 将预先创建的 LVGL 屏幕压入栈并使其激活。
-    /// @param on_destroy  屏幕对象删除前调用的回调（如需释放用户数据）。
-    void Push(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
+    ~ScreenManager()
+    {
+        while (!stack_.empty())
+        {
+            DestroyFrame(stack_.back());
+            stack_.pop_back();
+        }
+    }
 
-    /// 删除栈顶屏幕并返回上一个屏幕。
-    /// 只剩一个屏幕时不操作。
-    void Pop();
+    void Push(lv_obj_t* screen, DestroyCallback on_destroy = nullptr)
+    {
+        stack_.push_back({screen, std::move(on_destroy)});
+        LoadTop();
+    }
 
-    /// 替换栈顶屏幕（pop + push 不产生中间重绘）。
-    void Replace(lv_obj_t* screen, DestroyCallback on_destroy = nullptr);
+    void Pop()
+    {
+        if (stack_.size() <= 1)
+        {
+            ESP_LOGW(kTag, "Cannot pop last screen");
+            return;
+        }
 
-    /// 栈中屏幕数量。
+        DestroyFrame(stack_.back());
+        stack_.pop_back();
+        LoadTop();
+    }
+
+    void Replace(lv_obj_t* screen, DestroyCallback on_destroy = nullptr)
+    {
+        if (!stack_.empty())
+        {
+            DestroyFrame(stack_.back());
+            stack_.pop_back();
+        }
+        stack_.push_back({screen, std::move(on_destroy)});
+        LoadTop();
+    }
+
     size_t Depth() const { return stack_.size(); }
 
-    hal::IDisplay& Display() { return display_; }
-    hal::IInput& Input() { return input_; }
+    DisplayT& Display() { return display_; }
+    InputT& Input() { return input_; }
 };
 
 }  // namespace launcher::ui

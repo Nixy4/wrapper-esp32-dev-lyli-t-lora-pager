@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/i_input.hpp"
+#include "hal/input_base.hpp"
 #include "wrapper/logger.hpp"
 #include "device/lilygo_t_lora_pager_keyboard.hpp"
 
@@ -23,7 +23,7 @@ namespace launcher::hal
  *
  * 只分发按键按下（pressed）事件；按键松开事件会被静默丢弃。
  */
-class InputEsp32 : public IInput
+class InputEsp32 : public InputBase<InputEsp32>
 {
     wrapper::Logger& logger_;
     wrapper::LilyGoLoRaPagerKeyboard kb_;
@@ -37,8 +37,8 @@ class InputEsp32 : public IInput
     /// @param tca     已初始化的 TCA8418 引用。
     InputEsp32(wrapper::Logger& logger, wrapper::Tca8418& tca);
 
-    void SetCallback(InputCallback cb) override;
-    void Poll() override;
+    void SetCallback(InputCallback cb);
+    void Poll();
 };
 
 }  // namespace launcher::hal

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/i_storage.hpp"
+#include "hal/storage_base.hpp"
 #include "wrapper/logger.hpp"
 #include "wrapper/spi.hpp"
 #include "wrapper/sd_spi.hpp"
@@ -18,7 +18,7 @@ namespace launcher::hal
  *
  * T-LoRa Pager SD 卡：CS = GPIO_NUM_21，共享 SPI 总线（SPI2_HOST）。
  */
-class StorageEsp32 : public IStorage
+class StorageEsp32 : public StorageBase<StorageEsp32>
 {
     wrapper::Logger& logger_;
     wrapper::SpiBus& spi_bus_;
@@ -39,23 +39,23 @@ class StorageEsp32 : public IStorage
                  gpio_num_t sd_cs_pin,
                  const char* sd_mount_point = CONFIG_LAUNCHER_SD_MOUNT_POINT);
 
-    ~StorageEsp32() override;
+    ~StorageEsp32();
 
     // ── NVS ──────────────────────────────────────────────────────────────────
 
-    bool NvsGet(const char* ns, const char* key, std::string& out) override;
-    bool NvsSet(const char* ns, const char* key, const std::string& val) override;
-    bool NvsDel(const char* ns, const char* key) override;
-    bool NvsIterateKeys(const char* ns, std::vector<std::string>& keys) override;
+    bool NvsGet(const char* ns, const char* key, std::string& out);
+    bool NvsSet(const char* ns, const char* key, const std::string& val);
+    bool NvsDel(const char* ns, const char* key);
+    bool NvsIterateKeys(const char* ns, std::vector<std::string>& keys);
 
     // ── SD 卡 ────────────────────────────────────────────────────────────────
-    bool SdMount() override;
-    bool SdUnmount() override;
-    bool SdAvailable() override { return sd_mounted_; }
-    std::vector<std::string> SdListFiles(const char* dir, const char* ext) override;
-    bool SdFileSize(const char* path, size_t& out_size) override;
-    FILE* SdOpenRead(const char* path) override;
-    void SdClose(FILE* f) override;
+    bool SdMount();
+    bool SdUnmount();
+    bool SdAvailable() { return sd_mounted_; }
+    std::vector<std::string> SdListFiles(const char* dir, const char* ext);
+    bool SdFileSize(const char* path, size_t& out_size);
+    FILE* SdOpenRead(const char* path);
+    void SdClose(FILE* f);
 };
 
 }  // namespace launcher::hal

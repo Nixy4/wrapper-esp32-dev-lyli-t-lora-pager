@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/i_partition.hpp"
+#include "hal/partition_base.hpp"
 #include "wrapper/logger.hpp"
 #include "wrapper/partition.hpp"
 
@@ -20,7 +20,7 @@ namespace launcher::hal
  * OTA 槽位（ota_0、ota_1 等）。目标 OTA 槽位必须已在
  * partitions.csv 中定义。动态创建槽位留待未来版本支持。
  */
-class PartitionEsp32 : public IPartition
+class PartitionEsp32 : public PartitionBase<PartitionEsp32>
 {
     wrapper::Logger& logger_;
     wrapper::PartitionManager part_mgr_;
@@ -33,15 +33,15 @@ class PartitionEsp32 : public IPartition
    public:
     explicit PartitionEsp32(wrapper::Logger& logger);
 
-    bool PlanInstall(const char* label, size_t image_size, InstallSlot& slot) override;
+    bool PlanInstall(const char* label, size_t image_size, InstallSlot& slot);
 
-    bool FlashBegin(const InstallSlot& slot, size_t image_size) override;
-    bool FlashWrite(const uint8_t* data, size_t len) override;
-    bool FlashEnd() override;
-    bool FlashAbort() override;
+    bool FlashBegin(const InstallSlot& slot, size_t image_size);
+    bool FlashWrite(const uint8_t* data, size_t len);
+    bool FlashEnd();
+    bool FlashAbort();
 
-    bool SetBootByLabel(const char* label) override;
-    bool GetBootLabel(char* label_out, size_t max_len) override;
+    bool SetBootByLabel(const char* label);
+    bool GetBootLabel(char* label_out, size_t max_len);
 };
 
 }  // namespace launcher::hal

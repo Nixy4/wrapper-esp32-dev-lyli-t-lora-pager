@@ -8,7 +8,7 @@ namespace launcher::hal
 /**
  * @brief 导航按键标识符。
  *
- * 从设备的按鈕/编码器/键盘按键映射而来。
+ * 从设备的按钮/编码器/键盘按键映射而来。
  * 具体映射关系位于 HAL ESP32 实现（input_esp32.hpp），
  * 因此移植到其他平台时只需修改该文件。
  */
@@ -34,23 +34,18 @@ struct InputEvent
 using InputCallback = std::function<void(const InputEvent&)>;
 
 /**
- * @brief 平台无关的输入抽象接口。
+ * @brief CRTP 静态基类：平台无关的输入接口约束。
  *
- * 调用方注册回调后，周期性调用 poll()（通常在专用 FreeRTOS
- * 任务中每 10ms 调用一次）。
+ * Derived 须提供以下方法（无 virtual）：
+ *   SetCallback / Poll
  *
  * ESP32 实现： esp32/input_esp32.hpp
  */
-class IInput
+template <typename Derived>
+class InputBase
 {
-   public:
-    virtual ~IInput() = default;
-
-    /// 注册事件回调（传入 nullptr 可取消注册）。
-    virtual void SetCallback(InputCallback cb) = 0;
-
-    /// 读取待处理输入并将事件分发给已注册的回调。
-    virtual void Poll() = 0;
+   protected:
+    ~InputBase() = default;
 };
 
 }  // namespace launcher::hal

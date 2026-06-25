@@ -1,7 +1,9 @@
 #pragma once
 
-#include <vector>
 #include <cstdio>
+#include <cctype>
+#include <string>
+#include <vector>
 #include <esp_log.h>
 
 #include "lvgl.h"
@@ -45,40 +47,10 @@ class ScreenAppList
     lv_obj_t* status_lbl_ = nullptr;
 
     std::vector<core::AppInfo> apps_;
+    std::vector<lv_obj_t*> app_rows_;
     int selected_idx_ = 0;
 
     static constexpr const char* kTag = "Launcher|AppList";
-
-    struct AppListCtx
-    {
-        ScreenAppList* self;
-        int idx;
-    };
-
-    static void OnListItemClicked(lv_event_t* e)
-    {
-        auto* ctx = static_cast<AppListCtx*>(lv_event_get_user_data(e));
-        if (ctx && lv_event_get_code(e) == LV_EVENT_CLICKED)
-            ctx->self->ConfirmBoot(ctx->idx);
-    }
-
-    static void OnSdInstallClicked(lv_event_t* e)
-    {
-        if (lv_event_get_code(e) != LV_EVENT_CLICKED)
-            return;
-        auto* self = static_cast<ScreenAppList*>(lv_event_get_user_data(e));
-        if (self)
-            PushSdBrowser(self->mgr_, self->registry_, self->installer_);
-    }
-
-    static void OnSettingsClicked(lv_event_t* e)
-    {
-        if (lv_event_get_code(e) != LV_EVENT_CLICKED)
-            return;
-        auto* self = static_cast<ScreenAppList*>(lv_event_get_user_data(e));
-        if (self)
-            PushSettings(self->mgr_, self->registry_);
-    }
 
     void BuildWidgets()
     {
@@ -100,35 +72,21 @@ class ScreenAppList
         lv_obj_set_style_text_color(title, lv_color_hex(0xE2E2E2), 0);
         lv_obj_align(title, LV_ALIGN_LEFT_MID, 4, 0);
 
-        // ── "SD Install" button
-        lv_obj_t* btn_sd = lv_button_create(title_bar);
-        lv_obj_set_size(btn_sd, 80, 22);
-        lv_obj_align(btn_sd, LV_ALIGN_RIGHT_MID, -90, 0);
-        lv_obj_set_style_bg_color(btn_sd, lv_color_hex(0x0F3460), 0);
-        lv_obj_t* btn_sd_lbl = lv_label_create(btn_sd);
-        lv_label_set_text(btn_sd_lbl, "SD Install");
-        lv_obj_set_style_text_font(btn_sd_lbl, &lv_font_montserrat_14, 0);
-        lv_obj_center(btn_sd_lbl);
-        lv_obj_add_event_cb(btn_sd, OnSdInstallClicked, LV_EVENT_CLICKED, this);
-
-        // ── "Settings" button
-        lv_obj_t* btn_set = lv_button_create(title_bar);
-        lv_obj_set_size(btn_set, 70, 22);
-        lv_obj_align(btn_set, LV_ALIGN_RIGHT_MID, -4, 0);
-        lv_obj_set_style_bg_color(btn_set, lv_color_hex(0x0F3460), 0);
-        lv_obj_t* btn_set_lbl = lv_label_create(btn_set);
-        lv_label_set_text(btn_set_lbl, "Settings");
-        lv_obj_set_style_text_font(btn_set_lbl, &lv_font_montserrat_14, 0);
-        lv_obj_center(btn_set_lbl);
-        lv_obj_add_event_cb(btn_set, OnSettingsClicked, LV_EVENT_CLICKED, this);
+        lv_obj_t* hints = lv_label_create(title_bar);
+        lv_label_set_text(hints, "d: SD Install   s: Settings");
+        lv_obj_set_style_text_font(hints, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_color(hints, lv_color_hex(0x9FB7D6), 0);
+        lv_obj_align(hints, LV_ALIGN_RIGHT_MID, -4, 0);
 
         // ── Scrollable app list
-        list_ = lv_list_create(screen_);
+        list_ = lv_obj_create(screen_);
         lv_obj_set_size(list_, W, disp.Height() - 50);
         lv_obj_align(list_, LV_ALIGN_TOP_MID, 0, 32);
         lv_obj_set_style_bg_color(list_, lv_color_hex(0x1A1A2E), 0);
         lv_obj_set_style_border_width(list_, 0, 0);
         lv_obj_set_style_radius(list_, 0, 0);
+        lv_obj_set_style_pad_all(list_, 4, 0);
+        lv_obj_set_scroll_dir(list_, LV_DIR_VER);
 
         // ── 状态栏
         status_lbl_ = lv_label_create(screen_);
@@ -146,30 +104,36 @@ class ScreenAppList
 
         registry_.Load(apps_);
         lv_obj_clean(list_);
+        app_rows_.clear();
+        selected_idx_ = 0;
 
         if (apps_.empty())
         {
-            lv_obj_t* lbl = lv_list_add_text(list_, "No apps installed");
+            lv_obj_t* lbl = lv_label_create(list_);
+            lv_label_set_text(lbl, "No apps installed");
+            lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
             lv_obj_set_style_text_color(lbl, lv_color_hex(0x888888), 0);
+            lv_obj_align(lbl, LV_ALIGN_TOP_LEFT, 4, 4);
         }
         else
         {
             for (int i = 0; i < static_cast<int>(apps_.size()); ++i)
             {
-                lv_obj_t* btn = lv_list_add_button(list_, LV_SYMBOL_FILE, apps_[i].name.c_str());
-                lv_obj_set_style_text_font(lv_obj_get_child(btn, 1), &lv_font_montserrat_14, 0);
-
-                auto* ctx = new AppListCtx{this, i};
-                lv_obj_add_event_cb(btn, OnListItemClicked, LV_EVENT_CLICKED, ctx);
-                lv_obj_add_event_cb(
-                    btn, [](lv_event_t* e)
-                    { delete static_cast<AppListCtx*>(lv_event_get_user_data(e)); },
-                    LV_EVENT_DELETE, ctx);
+                lv_obj_t* row = lv_label_create(list_);
+                lv_obj_set_size(row, lv_obj_get_width(list_) - 12, 24);
+                lv_obj_align(row, LV_ALIGN_TOP_LEFT, 4, i * 26);
+                lv_label_set_long_mode(row, LV_LABEL_LONG_DOT);
+                lv_obj_set_style_text_font(row, &lv_font_montserrat_14, 0);
+                lv_obj_set_style_pad_left(row, 6, 0);
+                lv_obj_set_style_pad_right(row, 6, 0);
+                lv_obj_set_style_pad_top(row, 4, 0);
+                lv_obj_set_style_radius(row, 4, 0);
+                app_rows_.push_back(row);
             }
         }
 
         UpdateStatus();
-        selected_idx_ = 0;
+        UpdateSelection();
     }
 
     void UpdateStatus()
@@ -177,39 +141,71 @@ class ScreenAppList
         if (!status_lbl_)
             return;
         char buf[64];
-        snprintf(buf, sizeof(buf), "%zu app(s) installed  [i=up  k=down  ENT=boot]", apps_.size());
+        snprintf(buf, sizeof(buf), "%zu app(s)  [i=up  k=down  ENT=boot  d=sd  s=settings]",
+                 apps_.size());
         lv_label_set_text(status_lbl_, buf);
+    }
+
+    void UpdateSelection()
+    {
+        for (int i = 0; i < static_cast<int>(app_rows_.size()); ++i)
+        {
+            lv_obj_t* row = app_rows_[i];
+            const bool selected = (i == selected_idx_);
+            std::string text = selected ? "> " : "  ";
+            text += apps_[i].name;
+            lv_label_set_text(row, text.c_str());
+            lv_obj_set_style_text_color(row, selected ? lv_color_hex(0xFFFFFF)
+                                                      : lv_color_hex(0xC9D1E3),
+                                        0);
+            lv_obj_set_style_bg_color(row, selected ? lv_color_hex(0x0F3460)
+                                                    : lv_color_hex(0x1A1A2E),
+                                      0);
+            lv_obj_set_style_bg_opa(row, selected ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
+        }
+    }
+
+    void MoveSelection(int delta)
+    {
+        if (apps_.empty() || app_rows_.empty())
+            return;
+
+        auto& disp = mgr_.Display();
+        selected_idx_ = (selected_idx_ + delta + static_cast<int>(apps_.size())) %
+                        static_cast<int>(apps_.size());
+
+        if (disp.Lock(100))
+        {
+            UpdateSelection();
+            lv_obj_t* row = app_rows_[selected_idx_];
+            if (row)
+                lv_obj_scroll_to_view(row, LV_ANIM_ON);
+            disp.Unlock();
+        }
     }
 
     void HandleInput(const hal::InputEvent& ev)
     {
+        if (ev.nav == hal::NavKey::None && ev.ch != '\0')
+        {
+            const char lc = static_cast<char>(tolower(static_cast<unsigned char>(ev.ch)));
+            if (lc == 'd')
+                PushSdBrowser(mgr_, registry_, installer_);
+            else if (lc == 's')
+                PushSettings(mgr_, registry_);
+            return;
+        }
+
         if (apps_.empty())
             return;
 
-        auto& disp = mgr_.Display();
-
         if (ev.nav == hal::NavKey::Next)
         {
-            selected_idx_ = (selected_idx_ + 1) % static_cast<int>(apps_.size());
-            if (disp.Lock(100))
-            {
-                lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
-                if (btn)
-                    lv_obj_scroll_to_view(btn, LV_ANIM_ON);
-                disp.Unlock();
-            }
+            MoveSelection(1);
         }
         else if (ev.nav == hal::NavKey::Prev)
         {
-            selected_idx_ = (selected_idx_ - 1 + static_cast<int>(apps_.size())) %
-                            static_cast<int>(apps_.size());
-            if (disp.Lock(100))
-            {
-                lv_obj_t* btn = lv_obj_get_child(list_, selected_idx_);
-                if (btn)
-                    lv_obj_scroll_to_view(btn, LV_ANIM_ON);
-                disp.Unlock();
-            }
+            MoveSelection(-1);
         }
         else if (ev.nav == hal::NavKey::Select)
         {
@@ -249,6 +245,11 @@ class ScreenAppList
     }
 
     lv_obj_t* Screen() const { return screen_; }
+
+    void Activate()
+    {
+        mgr_.Input().SetCallback([this](const hal::InputEvent& ev) { HandleInput(ev); });
+    }
 };
 
 }  // namespace launcher::ui

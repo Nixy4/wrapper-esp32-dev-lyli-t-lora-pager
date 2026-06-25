@@ -237,6 +237,11 @@ class ScreenSdBrowser
 
     lv_obj_t* Screen() const { return screen_; }
 
+    void Activate()
+    {
+        mgr_.Input().SetCallback([this](const hal::InputEvent& ev) { HandleInput(ev); });
+    }
+
     void SetFiles(std::vector<std::string> files)
     {
         files_ = std::move(files);
@@ -250,7 +255,7 @@ void PushSdBrowser(ScreenMgrT& mgr, RegistryT& registry, InstallerT& installer)
 {
     auto* scr = new ScreenSdBrowser<ScreenMgrT, RegistryT, InstallerT>(mgr, registry, installer);
     scr->SetFiles(registry.GetStorage().SdListFiles(CONFIG_LAUNCHER_SD_MOUNT_POINT, ".bin"));
-    mgr.Push(scr->Screen(), [scr]() { delete scr; });
+    mgr.Push(scr->Screen(), [scr]() { delete scr; }, [scr]() { scr->Activate(); });
 }
 
 }  // namespace launcher::ui

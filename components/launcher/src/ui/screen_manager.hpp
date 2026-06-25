@@ -32,6 +32,7 @@ class ScreenManager
     using display_type = DisplayT;
     using input_type = InputT;
     using DestroyCallback = std::function<void()>;
+    using ActivateCallback = std::function<void()>;
 
    private:
     DisplayT& display_;
@@ -43,6 +44,7 @@ class ScreenManager
     {
         lv_obj_t* screen = nullptr;
         DestroyCallback on_destroy;
+        ActivateCallback on_activate;
     };
 
     std::vector<Frame> stack_;
@@ -60,6 +62,9 @@ class ScreenManager
         {
             display_.LoadScreen(scr);
             display_.Unlock();
+
+            if (stack_.back().on_activate)
+                stack_.back().on_activate();
         }
         else
         {
@@ -95,9 +100,11 @@ class ScreenManager
         }
     }
 
-    void Push(lv_obj_t* screen, DestroyCallback on_destroy = nullptr)
+    void Push(lv_obj_t* screen,
+              DestroyCallback on_destroy = nullptr,
+              ActivateCallback on_activate = nullptr)
     {
-        stack_.push_back({screen, std::move(on_destroy)});
+        stack_.push_back({screen, std::move(on_destroy), std::move(on_activate)});
         LoadTop();
     }
 
@@ -114,14 +121,16 @@ class ScreenManager
         LoadTop();
     }
 
-    void Replace(lv_obj_t* screen, DestroyCallback on_destroy = nullptr)
+    void Replace(lv_obj_t* screen,
+                 DestroyCallback on_destroy = nullptr,
+                 ActivateCallback on_activate = nullptr)
     {
         if (!stack_.empty())
         {
             DestroyFrame(stack_.back());
             stack_.pop_back();
         }
-        stack_.push_back({screen, std::move(on_destroy)});
+        stack_.push_back({screen, std::move(on_destroy), std::move(on_activate)});
         LoadTop();
     }
 

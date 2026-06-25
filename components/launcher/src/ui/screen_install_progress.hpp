@@ -184,6 +184,8 @@ class ScreenInstallProgress
     }
 
     lv_obj_t* Screen() const { return screen_; }
+
+    void Activate() { mgr_.Input().SetCallback(nullptr); }
 };
 
 /// 辅助函数：创建安装进度屏幕并压入导航栈。
@@ -196,7 +198,7 @@ void PushInstallProgress(ScreenMgrT& mgr,
 {
     auto* scr = new ScreenInstallProgress<ScreenMgrT, RegistryT, InstallerT>(
         mgr, registry, installer, sd_path, display_name);
-    mgr.Push(scr->Screen(), [scr]() { delete scr; });
+    mgr.Push(scr->Screen(), [scr]() { delete scr; }, [scr]() { scr->Activate(); });
 }
 
 }  // namespace launcher::ui

@@ -164,7 +164,9 @@ static void RunLauncher(const Config& cfg)
     ScreenMgr_t screen_mgr(display_hal, input_hal);
 
     auto* app_list_screen = new AppList_t(screen_mgr, app_registry, boot_mgr, sd_installer);
-    screen_mgr.Push(app_list_screen->Screen(), [app_list_screen]() { delete app_list_screen; });
+    screen_mgr.Push(
+        app_list_screen->Screen(), [app_list_screen]() { delete app_list_screen; },
+        [app_list_screen]() { app_list_screen->Activate(); });
 
     // ── 9. 输入轮询任务
     // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────

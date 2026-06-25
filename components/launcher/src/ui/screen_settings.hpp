@@ -203,6 +203,11 @@ class ScreenSettings
     }
 
     lv_obj_t* Screen() const { return screen_; }
+
+    void Activate()
+    {
+        mgr_.Input().SetCallback([this](const hal::InputEvent& ev) { HandleInput(ev); });
+    }
 };
 
 /// 由 ScreenAppList 调用，将设置屏幕压入导航栈。
@@ -210,7 +215,7 @@ template <typename ScreenMgrT, typename RegistryT>
 void PushSettings(ScreenMgrT& mgr, RegistryT& registry)
 {
     auto* scr = new ScreenSettings<ScreenMgrT, RegistryT>(mgr, registry);
-    mgr.Push(scr->Screen(), [scr]() { delete scr; });
+    mgr.Push(scr->Screen(), [scr]() { delete scr; }, [scr]() { scr->Activate(); });
 }
 
 }  // namespace launcher::ui

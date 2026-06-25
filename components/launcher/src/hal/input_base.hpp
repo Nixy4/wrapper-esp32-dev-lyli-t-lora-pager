@@ -42,29 +42,39 @@ using InputCallback = std::function<void(const InputEvent&)>;
  *   void SetCallback(InputCallback cb)
  *   void Poll()
  */
-template<typename Derived>
+template <typename Derived>
 class InputBase
 {
-    template<typename T, typename = void>
-    struct HasSetCallback : std::false_type {};
-    template<typename T>
-    struct HasSetCallback<T, std::void_t<std::enable_if_t<std::is_void_v<
-        decltype(std::declval<T&>().SetCallback(
-            std::declval<InputCallback>()))>>>> : std::true_type {};
+    template <typename T, typename = void>
+    struct HasSetCallback : std::false_type
+    {
+    };
+    template <typename T>
+    struct HasSetCallback<
+        T,
+        std::void_t<std::enable_if_t<std::is_void_v<decltype(std::declval<T&>().SetCallback(
+            std::declval<InputCallback>()))>>>> : std::true_type
+    {
+    };
 
-    template<typename T, typename = void>
-    struct HasPoll : std::false_type {};
-    template<typename T>
-    struct HasPoll<T, std::void_t<std::enable_if_t<std::is_void_v<
-        decltype(std::declval<T&>().Poll())>>>> : std::true_type {};
+    template <typename T, typename = void>
+    struct HasPoll : std::false_type
+    {
+    };
+    template <typename T>
+    struct HasPoll<
+        T,
+        std::void_t<std::enable_if_t<std::is_void_v<decltype(std::declval<T&>().Poll())>>>>
+        : std::true_type
+    {
+    };
 
    protected:
     ~InputBase() noexcept
     {
         static_assert(HasSetCallback<Derived>::value,
-            "InputBase<D>: D 须实现 void SetCallback(InputCallback cb)");
-        static_assert(HasPoll<Derived>::value,
-            "InputBase<D>: D 须实现 void Poll()");
+                      "InputBase<D>: D 须实现 void SetCallback(InputCallback cb)");
+        static_assert(HasPoll<Derived>::value, "InputBase<D>: D 须实现 void Poll()");
     }
 };
 

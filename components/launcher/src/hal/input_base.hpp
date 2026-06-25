@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <type_traits>
+#include <utility>
 
 namespace launcher::hal
 {
@@ -34,18 +36,36 @@ struct InputEvent
 using InputCallback = std::function<void(const InputEvent&)>;
 
 /**
- * @brief CRTP 静态基类：平台无关的输入接口约束。
+ * @brief CRTP + SFINAE 静态基类：平台无关的输入接口约束。
  *
- * Derived 须提供以下方法（无 virtual）：
- *   SetCallback / Poll
- *
- * ESP32 实现： esp32/input_esp32.hpp
+ * 编译期验证 Derived 须实现：
+ *   void SetCallback(InputCallback cb)
+ *   void Poll()
  */
-template <typename Derived>
+template<typename Derived>
 class InputBase
 {
+    template<typename T, typename = void>
+    struct HasSetCallback : std::false_type {};
+    template<typename T>
+    struct HasSetCallback<T, std::void_t<std::enable_if_t<std::is_void_v<
+        decltype(std::declval<T&>().SetCallback(
+            std::declval<InputCallback>()))>>>> : std::true_type {};
+
+    template<typename T, typename = void>
+    struct HasPoll : std::false_type {};
+    template<typename T>
+    struct HasPoll<T, std::void_t<std::enable_if_t<std::is_void_v<
+        decltype(std::declval<T&>().Poll())>>>> : std::true_type {};
+
    protected:
-    ~InputBase() = default;
+    ~InputBase() noexcept
+    {
+        static_assert(HasSetCallback<Derived>::value,
+            "InputBase<D>: D 须实现 void SetCallback(InputCallback cb)");
+        static_assert(HasPoll<Derived>::value,
+            "InputBase<D>: D 须实现 void Poll()");
+    }
 };
 
 }  // namespace launcher::hal

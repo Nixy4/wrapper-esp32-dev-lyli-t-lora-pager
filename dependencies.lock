@@ -154,6 +154,6 @@ direct_dependencies:
 - espressif/m5stack_core_s3
 - idf
 - jbrilha/esp_lcd_st7789
-manifest_hash: ff52c1ecf193b3ddbae8e457a6389af23223c1a85ea440337c226a80fe5fe4f0
+manifest_hash: b6c3072c14867d6f40fe85757cde6cd37386050082b05fe07dcdec1c605bec42
 target: esp32s3
 version: 3.0.0

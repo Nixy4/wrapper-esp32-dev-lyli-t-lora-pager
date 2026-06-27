@@ -976,19 +976,6 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# Launcher
-#
-# default:
-CONFIG_LAUNCHER_BOARD_LILYGO_T_LORA_PAGER=y
-# default:
-CONFIG_LAUNCHER_SD_MOUNT_POINT="/sdcard"
-# default:
-CONFIG_LAUNCHER_NVS_APP_NS="l_apps"
-# default:
-CONFIG_LAUNCHER_NVS_CFG_NS="l_cfg"
-# end of Launcher
-
-#
 # Wrapper-ESP32
 #
 # CONFIG_WRAPPER_ESP32_BOARD_CUSTOM is not set

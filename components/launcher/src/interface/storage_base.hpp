@@ -24,5 +24,14 @@ class StorageBase
     virtual std::string GetMountPoint() { return mount_point_; }
 
     virtual std::vector<std::string> GetFileList(std::string_view path) = 0;
+
+    // ---- 挂载控制 ----
+
+    /// 使用已配置的挂载点挂载文件系统。
+    /// 对应 Reference 中的 setupSdCard() 的挂载阶段。
+    virtual bool Mount() = 0;
+
+    /// 卸载文件系统并释放底层资源。
+    virtual bool Unmount() = 0;
 };
 }  // namespace launcher

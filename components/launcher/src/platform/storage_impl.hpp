@@ -14,5 +14,8 @@ class StorageImpl : public StorageBase
     virtual bool IsMounted() override;
 
     virtual std::vector<std::string> GetFileList(std::string_view path) override;
+
+    virtual bool Mount() override;
+    virtual bool Unmount() override;
 };
 }  // namespace launcher

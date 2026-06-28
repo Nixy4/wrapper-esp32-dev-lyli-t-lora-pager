@@ -245,52 +245,15 @@ void task_fn_board_init(void* arg)
     board.InitKeyboard();
     board.InitEncoder();
     board.InitSdCard();
-
-    // 0.初始化GPIO0, 此管脚连接boot键, 用于触发软件关机
-    gpio_config_t io_conf = {};
-    io_conf.pin_bit_mask = (1ULL << GPIO_NUM_0);
-    io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
-
-    esp_err_t ret = gpio_config(&io_conf);
-    if (ret != ESP_OK)
-    {
-        l_main.Error("GPIO0 config failed: %d", ret);
-    }
-
-    ret = gpio_install_isr_service(0);
-    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE)
-    {
-        l_main.Error("GPIO ISR service install failed: %d", ret);
-        return;
-    }
-    else if (ret == ESP_ERR_INVALID_STATE)
-    {
-        l_main.Warning("GPIO ISR service already installed");
-    }
-    static std::atomic<bool> shutdown_requested{false};
-    gpio_isr_handler_add(
-        GPIO_NUM_0,
-        [](void*)
-        {
-            l_main.Info("GPIO0 pressed, triggering software shutdown...");
-            shutdown_requested.store(true);
-        },
-        nullptr);
+    board.InitBootButton();
 
     for (;;)
     {
-        board.GetKeyboardDriver().Poll();
-        if (shutdown_requested.load())
-        {
-            l_main.Info("Software shutdown requested. Exiting main loop...");
-            board.GetPmu().Shutdown();
-            break;
-        }
+        board.BootButtonHandler();
+        board.KeyboardHandler();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
+
     vTaskDelete(nullptr);
 }
 

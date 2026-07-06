@@ -3,3 +3,4 @@ managed_components/
 sdkconfig.old
 sdkconfig.backup
 .reference/
+.deprecated/

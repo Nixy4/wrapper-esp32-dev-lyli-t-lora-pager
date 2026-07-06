@@ -1,14 +1,20 @@
 {
-    "C_Cpp.formatting": "clangFormat",
-    "C_Cpp.clang_format_style": "file",
-    "C_Cpp.clang_format_fallbackStyle": "LLVM",
-    "[c]": {
-        "editor.defaultFormatter": "ms-vscode.cpptools"
-    },
-    "[cpp]": {
-        "editor.defaultFormatter": "ms-vscode.cpptools"
-    },
-    "editor.formatOnSave": true,
-    "idf.currentSetup": "/home/nix/.espressif/v6.0.1/esp-idf",
-    "cmake.cmakePath": "/home/nix/.espressif/tools/cmake/4.0.3/bin/cmake"
+  "C_Cpp.formatting": "clangFormat",
+  "C_Cpp.clang_format_style": "file",
+  "C_Cpp.clang_format_fallbackStyle": "LLVM",
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "editor.formatOnSave": true,
+  "idf.currentSetup": "/home/nix/.espressif/v6.0.1/esp-idf",
+  "cmake.cmakePath": "/home/nix/.espressif/tools/cmake/4.0.3/bin/cmake",
+  "clangd.path": "/home/nix/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/home/nix/esp/project/wrapper-esp32-dev-lyli-t-lora-pager/build"
+  ]
 }

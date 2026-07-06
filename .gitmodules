@@ -1,3 +1,7 @@
-[submodule "components/wrapper-esp32"]
-	path = components/wrapper-esp32
-	url = https://github.com/Nixy4/wrapper-esp32
+[submodule "components/nix-wrapper-esp-idf"]
+	path = components/nix-wrapper-esp-idf
+	url = https://github.com/Nixy4/nix-wrapper-esp-idf
+[submodule "components/nix-launcher-esp-idf"]
+	path = components/nix-launcher-esp-idf
+	url = https://github.com/Nixy4/nix-launcher-esp-idf.git
+	branch = main

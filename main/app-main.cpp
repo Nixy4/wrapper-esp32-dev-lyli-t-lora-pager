@@ -2,23 +2,48 @@
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-
-#include "launcher.hpp"
-
-static const char* TAG = "App";
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <algorithm>
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
 
 //! Application entry point
 //! ----------------------------------------------------------------------------------------
+#include "wrapper/logger.hpp"
+#include "board/lilygo/t-lora-pager.hpp"
+
+using namespace wrapper;
+
+Logger l_main("LoraPager", "Init");
+
+// ---------------------------------------------------------------------------
+void task_fn_board_init(void* arg)
+{
+    auto& board = LilyGoLoraPager::GetInstance();
+    board.InitBootButton();
+    board.InitCoreBusAndIoExpander();
+    board.InitDisplay();
+    board.InitAudio();
+    board.InitKeyboard();
+    board.InitEncoder();
+    board.InitSdCard();
+
+    for (;;)
+    {
+        board.BootButtonHandler();
+        board.KeyboardHandler();
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    vTaskDelete(nullptr);
+}
+
 extern "C" void app_main(void)
 {
-    ESP_LOGI(TAG, "Starting Launcher…");
-
-    launcher::Config cfg;
-    cfg.boot_to_last_app = true;
-    cfg.brightness = 70;
-    cfg.input_task_stack = 4096;
-    cfg.input_task_prio = 4;
-
-    // startTask() returns immediately; the Launcher runs in its own task.
-    launcher::startTask(cfg, 24576, 5);
+    xTaskCreate(task_fn_board_init, "board_init_task", 8192, nullptr, 5, nullptr);
 }

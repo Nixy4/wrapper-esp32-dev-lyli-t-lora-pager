@@ -976,19 +976,6 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# Launcher
-#
-# default:
-CONFIG_LAUNCHER_BOARD_LILYGO_T_LORA_PAGER=y
-# default:
-CONFIG_LAUNCHER_SD_MOUNT_POINT="/sdcard"
-# default:
-CONFIG_LAUNCHER_NVS_APP_NS="l_apps"
-# default:
-CONFIG_LAUNCHER_NVS_CFG_NS="l_cfg"
-# end of Launcher
-
-#
 # Wrapper-ESP32
 #
 # CONFIG_WRAPPER_ESP32_BOARD_CUSTOM is not set
@@ -3713,6 +3700,34 @@ CONFIG_CU_DIAGNOSTICS_COLOR_ALWAYS=y
 # default:
 # CONFIG_CU_GCC_STRING_1BYTE_ALIGN is not set
 # end of CMake Utilities
+
+#
+# Espressif ELF Loader Configuration
+#
+# default:
+CONFIG_ELF_LOADER_BUS_ADDRESS_MIRROR=y
+# default:
+CONFIG_ELF_LOADER=y
+# default:
+# CONFIG_ELF_DYNAMIC_LOAD_SHARED_OBJECT is not set
+# default:
+CONFIG_ELF_LOADER_CACHE_OFFSET=y
+# default:
+CONFIG_ELF_LOADER_LOAD_PSRAM=y
+
+#
+# ELF Symbols Table
+#
+# default:
+CONFIG_ELF_LOADER_LIBC_SYMBOLS=y
+# default:
+CONFIG_ELF_LOADER_ESPIDF_SYMBOLS=y
+# default:
+# CONFIG_ELF_LOADER_CUSTOMER_SYMBOLS is not set
+# default:
+CONFIG_ELF_LOADER_NUMBER_SYMBOLS=32
+# end of ELF Symbols Table
+# end of Espressif ELF Loader Configuration
 
 #
 # Camera configuration

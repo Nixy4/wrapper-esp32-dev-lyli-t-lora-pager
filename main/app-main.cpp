@@ -14,16 +14,20 @@
 
 //! Application entry point
 //! ----------------------------------------------------------------------------------------
-#include "wrapper/logger.hpp"
+#include "local/logger.hpp"
 #include "board/lilygo/t-lora-pager.hpp"
+#include "registry/elf_loader.hpp"
 
 using namespace wrapper;
 
 Logger l_main("LoraPager", "Init");
+ElfLoader elf_loader(l_main);
 
 // ---------------------------------------------------------------------------
 void task_fn_board_init(void* arg)
 {
+    elf_loader.Init();
+
     auto& board = LilyGoLoraPager::GetInstance();
     board.InitBootButton();
     board.InitCoreBusAndIoExpander();
